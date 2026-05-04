@@ -1,0 +1,21 @@
+ /* Gradient thumb backgrounds */
+    .g1 { background: linear-gradient(135deg, #1a0a2e, #7b5ea7, #ff3d6e); }
+    .g2 { background: linear-gradient(135deg, #0a1a2e, #005f73, #00e5c3); }
+    .g3 { background: linear-gradient(135deg, #2e0a1a, #a8004e, #ff7c5e); }
+    .g4 { background: linear-gradient(135deg, #0a2e1a, #1a6b3c, #7fff6e); }
+
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: var(--font-head);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}

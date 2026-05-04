@@ -1,0 +1,99 @@
+ @keyframes wavePulse {
+     from {
+         height: 8px;
+     }
+
+     to {
+         height: var(--h, 60px);
+     }
+ }
+
+ @keyframes spin {
+     from {
+         transform: translate(-50%, -50%) rotate(0deg);
+     }
+
+     to {
+         transform: translate(-50%, -50%) rotate(360deg);
+     }
+ }
+
+ @keyframes fadeUp {
+     from {
+         opacity: 0;
+         transform: translateY(24px);
+     }
+
+     to {
+         opacity: 1;
+         transform: translateY(0);
+     }
+ }
+
+ @keyframes fadeIn {
+     from {
+         opacity: 0;
+     }
+
+     to {
+         opacity: 1;
+     }
+ }
+
+ @keyframes eqAnim {
+     from {
+         height: 8px;
+     }
+
+     to {
+         height: var(--h);
+     }
+ }
+
+ @keyframes float {
+     from {
+         transform: translateY(0)
+     }
+
+     to {
+         transform: translateY(-6px)
+     }
+ }
+ @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+
+ /* Animated waveform background */
+    .wave-bg {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 180px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 20px;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .wave-bar {
+      width: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: wavePulse var(--d, 1.2s) ease-in-out infinite alternate;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes wavePulse {
+      from { height: 8px; }
+      to { height: var(--h, 60px); }
+    }
+
+    @keyframes float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-6px); }
+}
+
+@keyframes miniPulse {
+  from { height: 4px; }
+  to { height: var(--h); }
+}
