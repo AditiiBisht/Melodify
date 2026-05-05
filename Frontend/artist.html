@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Melodify — Artists</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080810;
+      --surface: #0f0f1a;
+      --card: #13131f;
+      --border: rgba(255,255,255,0.07);
+      --accent: #ff3d6e;
+      --accent2: #7b5ea7;
+      --accent3: #00e5c3;
+      --text: #f0eeff;
+      --muted: #7070a0;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: none;
+      min-height: 100vh;
+    }
+
+    /* Ambient background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 10% 15%, rgba(123,94,167,0.15) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 45% at 90% 85%, rgba(255,61,110,0.1) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 35% at 55% 50%, rgba(0,229,195,0.05) 0%, transparent 60%);
+    }
+
+    /* Custom cursor */
+    .cursor {
+      width: 12px; height: 12px;
+      background: var(--accent); border-radius: 50%;
+      position: fixed; pointer-events: none; z-index: 9999;
+      mix-blend-mode: screen;
+      transition: transform 0.15s ease;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid rgba(255,61,110,0.45);
+      border-radius: 50%; position: fixed;
+      pointer-events: none; z-index: 9998;
+    }
+    body:has(.artist-card:hover) .cursor { transform: scale(2.5); background: var(--accent3); }
+
+    /* ─── NAV ──────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 60px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(24px);
+      background: rgba(8,8,16,0.78);
+    }
+    .nav-logo {
+      font-family: var(--font-head); font-size: 1.5rem; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--text); text-decoration: none;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.88rem;
+      letter-spacing: 0.04em; text-transform: uppercase; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--accent); }
+    .nav-cta { display: flex; align-items: center; gap: 14px; }
+    .btn-ghost {
+      color: var(--muted); background: none; border: none;
+      font-family: var(--font-body); font-size: 0.88rem; cursor: none; transition: color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-pill {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 100px; padding: 10px 22px;
+      font-family: var(--font-body); font-size: 0.88rem; font-weight: 500;
+      cursor: none; transition: background 0.2s, transform 0.15s;
+    }
+    .btn-pill:hover { background: #ff1a57; transform: scale(1.04); }
+
+    /* ─── MAIN ─────────────────────────────────────── */
+    main { position: relative; z-index: 1; padding-top: 90px; }
+
+    /* ─── FEATURED ARTIST HERO ─────────────────────── */
+    .featured-hero {
+      position: relative; overflow: hidden;
+      min-height: 560px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 60px 60px 60px;
+      gap: 60px;
+    }
+    /* animated gradient orbs behind hero */
+    .hero-orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+    }
+    .hero-orb-1 {
+      width: 500px; height: 500px; top: -100px; left: -80px;
+      background: radial-gradient(circle, rgba(123,94,167,0.35), transparent 70%);
+      animation: driftA 8s ease-in-out infinite alternate;
+    }
+    .hero-orb-2 {
+      width: 400px; height: 400px; bottom: -80px; right: 200px;
+      background: radial-gradient(circle, rgba(255,61,110,0.25), transparent 70%);
+      animation: driftB 6s ease-in-out infinite alternate;
+    }
+    @keyframes driftA { from { transform: translate(0,0); } to { transform: translate(40px, 30px); } }
+    @keyframes driftB { from { transform: translate(0,0); } to { transform: translate(-30px, -20px); } }
+
+    .hero-left { position: relative; z-index: 1; }
+    .hero-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,61,110,0.12); border: 1px solid rgba(255,61,110,0.3);
+      border-radius: 100px; padding: 6px 16px;
+      font-size: 0.72rem; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 24px;
+      animation: fadeUp 0.7s ease both;
+    }
+    .hero-label::before {
+      content: ''; width: 6px; height: 6px; background: var(--accent);
+      border-radius: 50%; animation: blink 1.4s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero-artist-name {
+      font-family: var(--font-head); font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 800; letter-spacing: -0.045em; line-height: 0.95;
+      margin-bottom: 20px;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .hero-artist-name .hollow {
+      -webkit-text-stroke: 1.5px rgba(240,238,255,0.4);
+      color: transparent; display: block;
+    }
+    .hero-genre-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+    .hero-genre-tag {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 100px; padding: 5px 14px; font-size: 0.78rem; color: var(--muted);
+    }
+    .hero-bio {
+      font-size: 0.95rem; color: var(--muted); line-height: 1.75; max-width: 420px;
+      font-weight: 300; margin-bottom: 36px;
+      animation: fadeUp 0.7s 0.25s ease both;
+    }
+    .hero-actions {
+      display: flex; align-items: center; gap: 14px;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+    .btn-follow {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 100px; padding: 13px 30px;
+      font-family: var(--font-head); font-size: 0.95rem; font-weight: 600;
+      cursor: none; transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 32px rgba(255,61,110,0.35); letter-spacing: -0.01em;
+    }
+    .btn-follow:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(255,61,110,0.5); }
+    .btn-follow.following {
+      background: rgba(255,61,110,0.12); color: var(--accent);
+      border: 1px solid rgba(255,61,110,0.35); box-shadow: none;
+    }
+    .btn-play-hero {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+      color: var(--text); border-radius: 100px; padding: 13px 24px;
+      font-family: var(--font-body); font-size: 0.92rem; cursor: none;
+      transition: background 0.2s;
+    }
+    .btn-play-hero:hover { background: rgba(255,255,255,0.12); }
+
+    .hero-stats-row {
+      display: flex; gap: 36px; margin-top: 44px;
+      animation: fadeUp 0.7s 0.4s ease both;
+    }
+    .hstat-num {
+      font-family: var(--font-head); font-size: 1.6rem; font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .hstat-num.a { color: var(--accent); }
+    .hstat-num.b { color: var(--accent2); }
+    .hstat-num.c { color: var(--accent3); }
+    .hstat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; }
+
+    /* Featured artist avatar */
+    .hero-right {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 1s 0.4s ease both;
+    }
+    .artist-avatar-wrap {
+      position: relative; width: 380px; height: 380px;
+    }
+    .artist-avatar-ring {
+      position: absolute; inset: -16px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,61,110,0.2);
+      animation: rotateSlow 12s linear infinite;
+    }
+    .artist-avatar-ring::before {
+      content: ''; position: absolute;
+      width: 14px; height: 14px;
+      background: var(--accent); border-radius: 50%;
+      top: 50%; left: -7px;
+      box-shadow: 0 0 20px var(--accent);
+    }
+    @keyframes rotateSlow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .artist-avatar {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: linear-gradient(145deg, #1a0a2e 0%, #3d1060 30%, #7b2ff7 60%, #ff3d6e 90%);
+      position: relative; overflow: hidden;
+    }
+    .artist-avatar::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cdefs%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
+    }
+    .artist-avatar-label {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-family: var(--font-head); font-size: 5rem; font-weight: 800;
+      color: rgba(255,255,255,0.25); letter-spacing: -0.06em;
+      pointer-events: none;
+    }
+    /* floating badge */
+    .hero-badge {
+      position: absolute; bottom: 20px; right: -20px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px 18px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      animation: float 3.5s ease-in-out infinite alternate;
+    }
+    .hero-badge-icon { font-size: 1.4rem; }
+    .hero-badge-label { font-size: 0.7rem; color: var(--muted); }
+    .hero-badge-val { font-family: var(--font-head); font-size: 0.9rem; font-weight: 700; }
+    @keyframes float { from{transform:translateY(0)} to{transform:translateY(-8px)} }
+
+    /* ─── SEARCH + FILTER BAR ──────────────────────── */
+    .filter-bar {
+      padding: 0 60px 44px;
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    }
+    .search-box {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 13px 20px; flex: 1; max-width: 340px;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus-within { border-color: rgba(255,61,110,0.45); }
+    .search-box input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-family: var(--font-body); font-size: 0.9rem; flex: 1;
+    }
+    .search-box input::placeholder { color: var(--muted); }
+    .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .fchip {
+      padding: 9px 18px; border-radius: 100px; border: 1px solid var(--border);
+      font-size: 0.8rem; font-weight: 500; cursor: none;
+      transition: all 0.2s; background: var(--card); color: var(--muted);
+    }
+    .fchip:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+    .fchip.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 18px rgba(255,61,110,0.28); }
+    .sort-btn {
+      margin-left: auto; display: flex; align-items: center; gap: 8px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 12px; padding: 10px 16px;
+      font-family: var(--font-body); font-size: 0.82rem; cursor: none; transition: color 0.2s;
+    }
+    .sort-btn:hover { color: var(--text); }
+
+    /* ─── SECTION HEADERS ──────────────────────────── */
+    .sec-wrap { padding: 0 60px 60px; }
+    .sec-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; }
+    .sec-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin-bottom: 8px; }
+    .sec-title { font-family: var(--font-head); font-size: 1.65rem; font-weight: 800; letter-spacing: -0.03em; }
+    .see-all { color: var(--muted); font-size: 0.82rem; text-decoration: none; transition: color 0.2s; }
+    .see-all:hover { color: var(--text); }
+
+    /* ─── TRENDING ARTISTS (horizontal scroll) ──────── */
+    .trending-scroll {
+      display: flex; gap: 20px; overflow-x: auto; padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .trending-scroll::-webkit-scrollbar { display: none; }
+    .trending-card {
+      flex-shrink: 0; width: 180px; text-align: center;
+      cursor: none;
+    }
+    .trending-avatar {
+      width: 140px; height: 140px; border-radius: 50%;
+      margin: 0 auto 14px; position: relative; overflow: hidden;
+      transition: transform 0.3s;
+    }
+    .trending-card:hover .trending-avatar { transform: scale(1.06); }
+    .trending-avatar::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%;
+      border: 2px solid transparent;
+      background: linear-gradient(var(--bg), var(--bg)) padding-box,
+                  linear-gradient(135deg, var(--accent), var(--accent2)) border-box;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .trending-card:hover .trending-avatar::after { opacity: 1; }
+    .ta1 { background: linear-gradient(135deg, #0d0d2b, #3a1c71, #d76d77); }
+    .ta2 { background: linear-gradient(135deg, #0b2027, #40798c, #70a9a1); }
+    .ta3 { background: linear-gradient(135deg, #1a0533, #6b2d6b, #ff6b9d); }
+    .ta4 { background: linear-gradient(135deg, #0d1b2a, #1b4332, #95d5b2); }
+    .ta5 { background: linear-gradient(135deg, #2d1b69, #11998e, #38ef7d); }
+    .ta6 { background: linear-gradient(135deg, #2e1a00, #8b4513, #ffa500); }
+    .ta7 { background: linear-gradient(135deg, #0a0a2e, #191970, #4169e1); }
+    .ta8 { background: linear-gradient(135deg, #1a0a0a, #4d1c00, #ff6b35); }
+    .trending-avatar-emoji {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 2.8rem; opacity: 0.35;
+    }
+    .trending-name { font-family: var(--font-head); font-size: 0.92rem; font-weight: 700; margin-bottom: 3px; }
+    .trending-genre { font-size: 0.73rem; color: var(--muted); margin-bottom: 8px; }
+    .trending-followers { font-size: 0.72rem; color: var(--accent3); }
+
+    /* ─── MAIN ARTISTS GRID ────────────────────────── */
+    .artists-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+    .artist-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 24px; overflow: hidden;
+      cursor: none; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .artist-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255,61,110,0.3);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    }
+    .ac-banner {
+      height: 100px; position: relative; overflow: hidden;
+    }
+    .acb1 { background: linear-gradient(135deg, #0d0d2b, #3a1c71, #ff3d6e); }
+    .acb2 { background: linear-gradient(135deg, #001a2e, #004d6b, #00e5c3); }
+    .acb3 { background: linear-gradient(135deg, #1a0014, #5a003a, #ff69b4); }
+    .acb4 { background: linear-gradient(135deg, #0d1b0a, #1b4332, #7fff6e); }
+    .acb5 { background: linear-gradient(135deg, #1a1a00, #4d4d00, #ffd700); }
+    .acb6 { background: linear-gradient(135deg, #1a0500, #6b2000, #ff6b35); }
+    .acb7 { background: linear-gradient(135deg, #001a1a, #003d3d, #00ced1); }
+    .acb8 { background: linear-gradient(135deg, #0a0a2e, #1a1a60, #6666ff); }
+    .ac-banner-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, var(--card) 100%);
+    }
+    /* Animated wave pattern on banner */
+    .ac-banner-wave {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 40px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px;
+      opacity: 0.3;
+    }
+    .wave-mini { flex: 1; background: rgba(255,255,255,0.6); border-radius: 2px; }
+
+    .ac-body { padding: 0 20px 22px; }
+    .ac-avatar-wrap { margin-top: -32px; margin-bottom: 14px; position: relative; display: inline-block; }
+    .ac-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 3px solid var(--card);
+      position: relative; overflow: hidden;
+    }
+    .ac-verified {
+      position: absolute; bottom: 0; right: 0;
+      width: 20px; height: 20px;
+      background: var(--accent3); border-radius: 50%;
+      border: 2px solid var(--card);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.55rem;
+    }
+    .ac-name { font-family: var(--font-head); font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .ac-genre { font-size: 0.76rem; color: var(--muted); margin-bottom: 14px; }
+    .ac-meta { display: flex; gap: 16px; margin-bottom: 16px; }
+    .ac-meta-item { font-size: 0.75rem; color: var(--muted); }
+    .ac-meta-item strong { font-family: var(--font-head); font-size: 0.9rem; font-weight: 700; color: var(--text); display: block; }
+    .ac-follow-btn {
+      width: 100%; padding: 10px; border-radius: 100px;
+      font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
+      cursor: none; transition: all 0.22s; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05); color: var(--text);
+    }
+    .ac-follow-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 20px rgba(255,61,110,0.3); }
+    .ac-follow-btn.following { background: rgba(255,61,110,0.1); border-color: rgba(255,61,110,0.35); color: var(--accent); }
+
+    /* Top track preview inside card */
+    .ac-top-track {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.04); border-radius: 10px;
+      padding: 9px 12px; margin-bottom: 14px; cursor: none;
+      transition: background 0.2s;
+    }
+    .ac-top-track:hover { background: rgba(255,255,255,0.08); }
+    .ac-track-thumb {
+      width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+    }
+    .att1 { background: linear-gradient(135deg, #1a0533, #8a2be2); }
+    .att2 { background: linear-gradient(135deg, #003333, #00e5c3); }
+    .att3 { background: linear-gradient(135deg, #2e1a00, #ffa500); }
+    .att4 { background: linear-gradient(135deg, #0a0a2e, #4169e1); }
+    .att5 { background: linear-gradient(135deg, #1a1a00, #ffd700); }
+    .att6 { background: linear-gradient(135deg, #1a0500, #ff6b35); }
+    .att7 { background: linear-gradient(135deg, #001a1a, #00ced1); }
+    .att8 { background: linear-gradient(135deg, #0a0a2e, #6666ff); }
+    .ac-track-info { flex: 1; min-width: 0; }
+    .ac-track-name { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ac-track-plays { font-size: 0.68rem; color: var(--muted); }
+    .ac-play-icon { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; transition: color 0.2s; }
+    .ac-top-track:hover .ac-play-icon { color: var(--accent); }
+
+    /* ─── RISING ARTISTS BANNER ────────────────────── */
+    .rising-banner {
+      padding: 0 60px 60px;
+    }
+    .rising-inner {
+      background: linear-gradient(135deg, rgba(0,229,195,0.08) 0%, rgba(123,94,167,0.12) 50%, rgba(255,61,110,0.08) 100%);
+      border: 1px solid rgba(0,229,195,0.15);
+      border-radius: 28px; padding: 44px 52px;
+      display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px;
+    }
+    .rising-title { font-family: var(--font-head); font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 10px; }
+    .rising-title span { color: var(--accent3); }
+    .rising-sub { font-size: 0.9rem; color: var(--muted); line-height: 1.6; max-width: 440px; }
+    .rising-avatars { display: flex; }
+    .ra-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 3px solid var(--bg); margin-left: -14px;
+      transition: transform 0.2s; cursor: none;
+    }
+    .ra-avatar:first-child { margin-left: 0; }
+    .ra-avatar:hover { transform: translateY(-6px) scale(1.1); z-index: 5; }
+    .rav1 { background: linear-gradient(135deg,#3a1c71,#d76d77); }
+    .rav2 { background: linear-gradient(135deg,#40798c,#70a9a1); }
+    .rav3 { background: linear-gradient(135deg,#6b2d6b,#ff6b9d); }
+    .rav4 { background: linear-gradient(135deg,#1b4332,#95d5b2); }
+    .rav5 { background: linear-gradient(135deg,#11998e,#38ef7d); }
+    .rav-count {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 3px solid var(--bg); margin-left: -14px;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-head); font-size: 0.75rem; font-weight: 700; color: #fff;
+    }
+
+    /* ─── FOOTER ───────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 60px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: relative; z-index: 1;
+    }
+    .footer-logo { font-family: var(--font-head); font-size: 1.15rem; font-weight: 800; text-decoration: none; color: var(--text); }
+    .footer-logo span { color: var(--accent); }
+    .footer-copy { font-size: 0.78rem; color: var(--muted); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 0.78rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ─── ANIMATIONS ───────────────────────────────── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    .stagger > * {
+      animation: fadeUp 0.55s ease both;
+    }
+    .stagger > *:nth-child(1) { animation-delay: 0.05s; }
+    .stagger > *:nth-child(2) { animation-delay: 0.12s; }
+    .stagger > *:nth-child(3) { animation-delay: 0.19s; }
+    .stagger > *:nth-child(4) { animation-delay: 0.26s; }
+    .stagger > *:nth-child(5) { animation-delay: 0.33s; }
+    .stagger > *:nth-child(6) { animation-delay: 0.40s; }
+    .stagger > *:nth-child(7) { animation-delay: 0.47s; }
+    .stagger > *:nth-child(8) { animation-delay: 0.54s; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- Cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="index.html" class="nav-logo">Melod<span>ify</span></a>
+    <ul class="nav-links">
+      <li><a href="discover.html">Discover</a></li>
+      <li><a href="library.html">Library</a></li>
+      <li><a href="artists.html" class="active">Artists</a></li>
+      <li><a href="radio.html">Radio</a></li>
+      <li><a href="podcasts.html">Podcasts</a></li>
+    </ul>
+    <div class="nav-cta">
+      <button class="btn-ghost">Log in</button>
+      <button class="btn-pill">Start Free Trial</button>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ── FEATURED ARTIST HERO ── -->
+    <section class="featured-hero">
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+
+      <div class="hero-left">
+        <div class="hero-label">✦ Featured Artist of the Week</div>
+        <h1 class="hero-artist-name">
+          Luna
+          <span class="hollow">Wave</span>
+        </h1>
+        <div class="hero-genre-row">
+          <span class="hero-genre-tag">Synthwave</span>
+          <span class="hero-genre-tag">Electronic</span>
+          <span class="hero-genre-tag">Dream Pop</span>
+        </div>
+        <p class="hero-bio">
+          Los Angeles-based producer and vocalist crafting shimmering synth landscapes since 2018. Known for blending hypnotic beats with ethereal vocals that feel like driving through a neon city at 3am.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-follow" id="heroFollow" onclick="toggleFollow(this)">+ Follow</button>
+          <button class="btn-play-hero">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="white"/></svg>
+            Play Discography
+          </button>
+        </div>
+        <div class="hero-stats-row">
+          <div>
+            <div class="hstat-num a">4.2M</div>
+            <div class="hstat-label">Followers</div>
+          </div>
+          <div>
+            <div class="hstat-num b">38</div>
+            <div class="hstat-label">Releases</div>
+          </div>
+          <div>
+            <div class="hstat-num c">820M</div>
+            <div class="hstat-label">Total Streams</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="artist-avatar-wrap">
+          <div class="artist-avatar-ring"></div>
+          <div class="artist-avatar">
+            <div class="artist-avatar-label">LW</div>
+          </div>
+          <div class="hero-badge">
+            <div class="hero-badge-icon">🔥</div>
+            <div>
+              <div class="hero-badge-label">Monthly Listeners</div>
+              <div class="hero-badge-val">4.2M this month</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FILTER BAR ── -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="color:var(--muted);flex-shrink:0">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input type="text" placeholder="Search artists…" id="artistSearch"/>
+      </div>
+      <div class="filter-chips" id="filterChips">
+        <div class="fchip active" data-filter="all">All</div>
+        <div class="fchip" data-filter="pop">Pop</div>
+        <div class="fchip" data-filter="electronic">Electronic</div>
+        <div class="fchip" data-filter="hip-hop">Hip-Hop</div>
+        <div class="fchip" data-filter="indie">Indie</div>
+        <div class="fchip" data-filter="jazz">Jazz</div>
+        <div class="fchip" data-filter="ambient">Ambient</div>
+      </div>
+      <button class="sort-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M4 7h6M6 10h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Sort: Popular
+      </button>
+    </div>
+
+    <!-- ── TRENDING ARTISTS (scroll row) ── -->
+    <div class="sec-wrap" style="padding-bottom:40px">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">🔥 On Fire Right Now</div>
+          <div class="sec-title">Trending Artists</div>
+        </div>
+        <a href="#" class="see-all">See all →</a>
+      </div>
+      <div class="trending-scroll">
+        <div class="trending-card">
+          <div class="trending-avatar ta1"><div class="trending-avatar-emoji">🎹</div></div>
+          <div class="trending-name">Parallax Echo</div>
+          <div class="trending-genre">Electronic</div>
+          <div class="trending-followers">↑ 2.1M followers</div>
+        </div>
+        <div class="trending-card">
+          <div class="trending-avatar ta2"><div class="trending-avatar-emoji">🌊</div></div>
+          <div class="trending-name">Cozy Beats Lab</div>
+          <div class="trending-genre">Lo-fi</div>
+          <div class="trending-followers">↑ 1.8M followers</div>
+        </div>
+        <div class="trending-card">
+          <div class="trending-avatar ta3"><div class="trending-avatar-emoji">🌸</div></div>
+          <div class="trending-name">Nova Sine</div>
+          <div class="trending-genre">Indie Pop</div>
+          <div class="trending-followers">↑ 940K followers</div>
+        </div>
+        <div class="trending-card">
+          <div class="trending-avatar ta4"><div class="trending-avatar-emoji">🌿</div></div>
+          <div class="trending-name">Drift Signal</div>
+          <div class="trending-genre">Ambient</div>
+          <div class="trending-followers">↑ 1.3M followers</div>
+        </div>
+        <div class="trending-card">
+          <div class="trending-avatar ta5"><div class="trending-avatar-emoji">⚡</div></div>
+          <div class="trending-name">Atlas Groove</div>
+          <div class="trending-genre">Hip-Hop</div>
+          <div class="trending-followers">↑ 3.5M followers</div>
+        </div>
+        <div class="trending-card">
+          <div class="trending-avatar ta6"><div class="trending-avatar-emoji">🔥</div></div>
+          <div class="trending-name">The Velvet Moths</div>
+          <div class="trending-genre">Indie Rock</div>
+          <div class="trending-followers">↑ 780K followers</div>
+        </div>
+        <div class="trending-card">
+          <div class="trending-avatar ta7"><div class="trending-avatar-emoji">🌌</div></div>
+          <div class="trending-name">Starfield</div>
+          <div class="trending-genre">Synthpop</div>
+          <div class="trending-followers">↑ 2.7M followers</div>
+        </div>
+        <div class="trending-card">
+          <div class="trending-avatar ta8"><div class="trending-avatar-emoji">🎷</div></div>
+          <div class="trending-name">Ember Crest</div>
+          <div class="trending-genre">Soul / Jazz</div>
+          <div class="trending-followers">↑ 560K followers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALL ARTISTS GRID ── -->
+    <div class="sec-wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">✦ Full Roster</div>
+          <div class="sec-title">All Artists</div>
+        </div>
+        <a href="#" class="see-all">Browse all →</a>
+      </div>
+      <div class="artists-grid stagger" id="artistsGrid">
+
+        <!-- Card 1 -->
+        <div class="artist-card" data-genre="electronic">
+          <div class="ac-banner acb1">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave1"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta1"></div>
+              <div class="ac-verified">✓</div>
+            </div>
+            <div class="ac-name">Parallax Echo</div>
+            <div class="ac-genre">Electronic · Berlin</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att1"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Neon Horizon</div>
+                <div class="ac-track-plays">2.4M plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>2.1M</strong>Followers</div>
+              <div class="ac-meta-item"><strong>24</strong>Albums</div>
+              <div class="ac-meta-item"><strong>142M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="artist-card" data-genre="ambient">
+          <div class="ac-banner acb2">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave2"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta2"></div>
+              <div class="ac-verified">✓</div>
+            </div>
+            <div class="ac-name">Cozy Beats Lab</div>
+            <div class="ac-genre">Lo-fi · Tokyo</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att2"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Rainy Afternoon</div>
+                <div class="ac-track-plays">5.1M plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>1.8M</strong>Followers</div>
+              <div class="ac-meta-item"><strong>11</strong>Albums</div>
+              <div class="ac-meta-item"><strong>310M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn following" onclick="toggleFollow(this)">✓ Following</button>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="artist-card" data-genre="indie">
+          <div class="ac-banner acb3">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave3"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta3"></div>
+            </div>
+            <div class="ac-name">Nova Sine</div>
+            <div class="ac-genre">Indie Pop · London</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att3"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Golden Hours</div>
+                <div class="ac-track-plays">8.9M plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>940K</strong>Followers</div>
+              <div class="ac-meta-item"><strong>6</strong>Albums</div>
+              <div class="ac-meta-item"><strong>67M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="artist-card" data-genre="ambient">
+          <div class="ac-banner acb4">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave4"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta4"></div>
+              <div class="ac-verified">✓</div>
+            </div>
+            <div class="ac-name">Drift Signal</div>
+            <div class="ac-genre">Ambient · Portland</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att4"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Floating Worlds</div>
+                <div class="ac-track-plays">1.2M plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>1.3M</strong>Followers</div>
+              <div class="ac-meta-item"><strong>18</strong>Albums</div>
+              <div class="ac-meta-item"><strong>90M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn following" onclick="toggleFollow(this)">✓ Following</button>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="artist-card" data-genre="hip-hop">
+          <div class="ac-banner acb5">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave5"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta5"></div>
+              <div class="ac-verified">✓</div>
+            </div>
+            <div class="ac-name">Atlas Groove</div>
+            <div class="ac-genre">Hip-Hop · Atlanta</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att5"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Desert Sun</div>
+                <div class="ac-track-plays">12.4M plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>3.5M</strong>Followers</div>
+              <div class="ac-meta-item"><strong>9</strong>Albums</div>
+              <div class="ac-meta-item"><strong>480M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="artist-card" data-genre="indie">
+          <div class="ac-banner acb6">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave6"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta6"></div>
+            </div>
+            <div class="ac-name">The Velvet Moths</div>
+            <div class="ac-genre">Indie Rock · NYC</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att6"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Ember &amp; Ash</div>
+                <div class="ac-track-plays">3.1M plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>780K</strong>Followers</div>
+              <div class="ac-meta-item"><strong>4</strong>Albums</div>
+              <div class="ac-meta-item"><strong>55M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          </div>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="artist-card" data-genre="electronic">
+          <div class="ac-banner acb7">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave7"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta7"></div>
+              <div class="ac-verified">✓</div>
+            </div>
+            <div class="ac-name">Starfield</div>
+            <div class="ac-genre">Synthpop · Seoul</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att7"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Starlight Protocol</div>
+                <div class="ac-track-plays">7.3M plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>2.7M</strong>Followers</div>
+              <div class="ac-meta-item"><strong>15</strong>Albums</div>
+              <div class="ac-meta-item"><strong>220M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn following" onclick="toggleFollow(this)">✓ Following</button>
+          </div>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="artist-card" data-genre="jazz">
+          <div class="ac-banner acb8">
+            <div class="ac-banner-overlay"></div>
+            <div class="ac-banner-wave" id="wave8"></div>
+          </div>
+          <div class="ac-body">
+            <div class="ac-avatar-wrap">
+              <div class="ac-avatar ta8"></div>
+            </div>
+            <div class="ac-name">Ember Crest</div>
+            <div class="ac-genre">Soul / Jazz · Chicago</div>
+            <div class="ac-top-track">
+              <div class="ac-track-thumb att8"></div>
+              <div class="ac-track-info">
+                <div class="ac-track-name">Blue Velvet Night</div>
+                <div class="ac-track-plays">980K plays</div>
+              </div>
+              <div class="ac-play-icon">▶</div>
+            </div>
+            <div class="ac-meta">
+              <div class="ac-meta-item"><strong>560K</strong>Followers</div>
+              <div class="ac-meta-item"><strong>7</strong>Albums</div>
+              <div class="ac-meta-item"><strong>38M</strong>Streams</div>
+            </div>
+            <button class="ac-follow-btn" onclick="toggleFollow(this)">+ Follow</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── RISING ARTISTS BANNER ── -->
+    <div class="rising-banner">
+      <div class="rising-inner">
+        <div>
+          <div class="sec-label" style="margin-bottom:10px">🌱 Emerging Talent</div>
+          <div class="rising-title">Meet the <span>Rising</span> Artists</div>
+          <p class="rising-sub">Discover breakthrough musicians before they hit the charts. Our editorial team handpicks the most exciting new voices every week.</p>
+        </div>
+        <div>
+          <div style="margin-bottom:14px;font-size:0.8rem;color:var(--muted);text-align:right">32 new artists this week</div>
+          <div class="rising-avatars">
+            <div class="ra-avatar rav1"></div>
+            <div class="ra-avatar rav2"></div>
+            <div class="ra-avatar rav3"></div>
+            <div class="ra-avatar rav4"></div>
+            <div class="ra-avatar rav5"></div>
+            <div class="rav-count">+27</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="index.html" class="footer-logo">Melod<span>ify</span></a>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Support</a>
+    </div>
+    <div class="footer-copy">© 2026 Melodify, Inc. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // ── Cursor ──────────────────────────────────────
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('cursorRing');
+    let mx=0, my=0, rx=0, ry=0;
+    document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+    (function animate(){
+      rx += (mx-rx)*0.12; ry += (my-ry)*0.12;
+      cursor.style.left = mx-6+'px'; cursor.style.top = my-6+'px';
+      ring.style.left   = rx-18+'px'; ring.style.top  = ry-18+'px';
+      requestAnimationFrame(animate);
+    })();
+
+    // ── Follow toggle ───────────────────────────────
+    function toggleFollow(btn) {
+      const isFollowing = btn.classList.contains('following');
+      btn.classList.toggle('following');
+      btn.textContent = isFollowing ? '+ Follow' : '✓ Following';
+    }
+
+    // ── Genre filter ────────────────────────────────
+    document.getElementById('filterChips').addEventListener('click', e => {
+      const chip = e.target.closest('.fchip');
+      if (!chip) return;
+      document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const filter = chip.dataset.filter;
+      document.querySelectorAll('.artist-card').forEach(card => {
+        if (filter === 'all' || card.dataset.genre === filter) {
+          card.style.display = '';
+          card.style.animation = 'fadeUp 0.4s ease both';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+
+    // ── Search filter ───────────────────────────────
+    document.getElementById('artistSearch').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      document.querySelectorAll('.artist-card').forEach(card => {
+        const name = card.querySelector('.ac-name').textContent.toLowerCase();
+        card.style.display = name.includes(q) ? '' : 'none';
+      });
+    });
+
+    // ── Generate mini wave bars ─────────────────────
+    for (let i = 1; i <= 8; i++) {
+      const wave = document.getElementById('wave' + i);
+      if (!wave) continue;
+      for (let j = 0; j < 30; j++) {
+        const bar = document.createElement('div');
+        bar.className = 'wave-mini';
+        const h = Math.random() * 28 + 4;
+        bar.style.height = h + 'px';
+        bar.style.animation = `wavePulse ${(Math.random()*0.8+0.5).toFixed(2)}s ease-in-out infinite alternate`;
+        bar.style.animationDelay = (Math.random()*1.5).toFixed(2)+'s';
+        wave.appendChild(bar);
+      }
+    }
+
+    // Inject wave keyframe
+    const style = document.createElement('style');
+    style.textContent = `@keyframes wavePulse { from{height:4px} to{height:var(--h,24px)} }`;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

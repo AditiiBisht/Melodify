@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Melodify — Log In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080810;
+      --surface: #0d0d1a;
+      --card: #11111e;
+      --border: rgba(255,255,255,0.07);
+      --border-focus: rgba(255,61,110,0.45);
+      --border-error: rgba(255,61,110,0.8);
+      --border-success: rgba(0,229,195,0.5);
+      --accent: #ff3d6e;
+      --accent2: #7b5ea7;
+      --accent3: #00e5c3;
+      --text: #f0eeff;
+      --muted: #6a6a95;
+      --muted2: #4a4a70;
+      --error: #ff3d6e;
+      --success: #00e5c3;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-body); min-height: 100vh;
+      overflow: hidden; cursor: none;
+      display: grid; grid-template-columns: 1fr 1fr;
+    }
+
+    /* ── cursor ─────────────────────────────────── */
+    .cursor {
+      width: 10px; height: 10px; background: var(--accent);
+      border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999;
+      mix-blend-mode: screen; transform: translate(-50%,-50%);
+      transition: width .18s, height .18s, background .2s;
+    }
+    .cursor-ring {
+      width: 32px; height: 32px; border: 1.5px solid rgba(255,61,110,.4);
+      border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+    }
+    body:has(input:focus) .cursor { background: var(--accent3); }
+    body:has(.btn-submit:hover) .cursor { width: 16px; height: 16px; }
+
+    /* ══════════════════════════════════════════════
+       LEFT PANEL — Visual
+    ══════════════════════════════════════════════ */
+    .visual-panel {
+      position: relative; overflow: hidden;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 50px;
+    }
+
+    /* rich layered background */
+    .visual-panel::before {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 70% at 20% 10%, rgba(123,94,167,.3) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 60% at 85% 85%, rgba(255,61,110,.22) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 45% at 55% 50%, rgba(0,229,195,.08) 0%, transparent 65%);
+    }
+
+    /* animated grid lines */
+    .visual-panel::after {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 75%);
+    }
+
+    .vp-logo {
+      position: absolute; top: 36px; left: 40px; z-index: 10;
+      font-family: var(--font-head); font-size: 1.4rem; font-weight: 800;
+      letter-spacing: -.02em; text-decoration: none; color: var(--text);
+    }
+    .vp-logo span { color: var(--accent); }
+
+    /* ── vinyl record ──────────────────────────── */
+    .vinyl-wrap {
+      position: relative; width: 300px; height: 300px;
+      z-index: 2; margin-bottom: 48px;
+    }
+    .vinyl-outer-ring {
+      position: absolute; inset: -24px; border-radius: 50%;
+      border: 1px solid rgba(255,61,110,.18);
+      animation: spin 20s linear infinite;
+    }
+    .vinyl-outer-ring::before, .vinyl-outer-ring::after {
+      content: ''; position: absolute; width: 10px; height: 10px;
+      border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+      top: 50%; left: -5px; transform: translateY(-50%);
+    }
+    .vinyl-outer-ring::after {
+      left: auto; right: -5px; background: var(--accent2);
+      box-shadow: 0 0 12px var(--accent2);
+    }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    .vinyl {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: conic-gradient(
+        #0a0a14 0deg, #141428 30deg, #0a0a14 60deg,
+        #141428 90deg, #0a0a14 120deg, #141428 150deg,
+        #0a0a14 180deg, #141428 210deg, #0a0a14 240deg,
+        #141428 270deg, #0a0a14 300deg, #141428 330deg, #0a0a14 360deg
+      );
+      box-shadow:
+        0 0 0 2px rgba(255,255,255,.06),
+        0 30px 80px rgba(0,0,0,.7),
+        inset 0 0 60px rgba(0,0,0,.5);
+      animation: vinylSpin 6s linear infinite;
+      position: relative;
+    }
+    @keyframes vinylSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    /* grooves */
+    .vinyl::before {
+      content: ''; position: absolute; inset: 30px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.04);
+      box-shadow:
+        0 0 0 20px rgba(255,255,255,.02),
+        0 0 0 40px rgba(255,255,255,.02),
+        0 0 0 60px rgba(255,255,255,.015),
+        0 0 0 80px rgba(255,255,255,.015);
+    }
+
+    /* center label */
+    .vinyl-label {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .vinyl-center {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: linear-gradient(145deg, #1a0533, #7b2ff7, #ff3d6e);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 40px rgba(255,61,110,.4);
+      font-family: var(--font-head); font-size: 1rem; font-weight: 800;
+      letter-spacing: -.02em;
+      position: relative;
+    }
+    .vinyl-center::after {
+      content: ''; position: absolute; width: 12px; height: 12px;
+      background: var(--bg); border-radius: 50%;
+    }
+
+    /* tone arm */
+    .tone-arm {
+      position: absolute; top: -10px; right: -20px;
+      width: 110px; height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), rgba(255,255,255,.15));
+      border-radius: 2px; transform-origin: right center;
+      transform: rotate(-28deg);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+    }
+    .tone-arm::after {
+      content: ''; position: absolute; right: -4px; top: -4px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.3);
+    }
+
+    /* equalizer bars */
+    .eq-bars {
+      display: flex; align-items: flex-end; gap: 5px;
+      height: 48px; z-index: 2;
+    }
+    .eq-bar {
+      width: 5px; background: linear-gradient(to top, var(--accent2), var(--accent));
+      border-radius: 3px; opacity: .75;
+      animation: eqPulse var(--d,.7s) ease-in-out infinite alternate;
+      animation-delay: var(--dl,0s);
+    }
+    @keyframes eqPulse { from{height:5px} to{height:var(--h,36px)} }
+
+    .vp-copy {
+      position: absolute; bottom: 40px; left: 40px; right: 40px; z-index: 2;
+    }
+    .vp-copy-title {
+      font-family: var(--font-head); font-size: 1.8rem; font-weight: 800;
+      letter-spacing: -.04em; line-height: 1.1; margin-bottom: 10px;
+    }
+    .vp-copy-title .outline {
+      -webkit-text-stroke: 1px rgba(240,238,255,.35); color: transparent;
+    }
+    .vp-copy-sub { font-size: .85rem; color: var(--muted); line-height: 1.6; font-weight: 300; }
+
+    /* ── floating mini cards ────────────────────── */
+    .float-card {
+      position: absolute; z-index: 5;
+      background: rgba(17,17,30,.85); backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.4);
+    }
+    .fc-top {
+      top: 110px; right: 30px;
+      animation: floatA 4s ease-in-out infinite alternate;
+    }
+    .fc-bot {
+      bottom: 160px; left: 30px;
+      animation: floatB 3.5s ease-in-out infinite alternate;
+    }
+    @keyframes floatA { from{transform:translateY(0)} to{transform:translateY(-10px)} }
+    @keyframes floatB { from{transform:translateY(0)} to{transform:translateY(8px)} }
+    .fc-icon { font-size: 1.2rem; }
+    .fc-label { font-size: .68rem; color: var(--muted); }
+    .fc-val   { font-family: var(--font-head); font-size: .85rem; font-weight: 700; }
+    .fc-dot   { width: 6px; height: 6px; border-radius: 50%; background: var(--accent3); animation: blink 1.4s infinite; flex-shrink: 0; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    /* ══════════════════════════════════════════════
+       RIGHT PANEL — Form
+    ══════════════════════════════════════════════ */
+    .form-panel {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 64px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* subtle top-right glow */
+    .form-panel::before {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(123,94,167,.12), transparent 70%);
+      pointer-events: none;
+    }
+
+    .form-inner { width: 100%; max-width: 400px; }
+
+    /* header */
+    .form-header { margin-bottom: 36px; animation: fadeUp .6s ease both; }
+    .form-eyebrow { font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--accent); margin-bottom: 10px; }
+    .form-title { font-family: var(--font-head); font-size: 2.4rem; font-weight: 800; letter-spacing: -.045em; line-height: 1.0; margin-bottom: 10px; }
+    .form-subtitle { font-size: .9rem; color: var(--muted); line-height: 1.6; font-weight: 300; }
+    .form-subtitle a { color: var(--accent); text-decoration: none; font-weight: 500; transition: opacity .18s; }
+    .form-subtitle a:hover { opacity: .75; }
+
+    /* social buttons */
+    .social-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-bottom: 28px;
+      animation: fadeUp .6s .08s ease both;
+    }
+    .social-btn {
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      padding: 12px 16px; border-radius: 13px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); font-family: var(--font-body); font-size: .84rem; font-weight: 500;
+      cursor: none; transition: border-color .2s, background .2s;
+    }
+    .social-btn:hover { border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.05); }
+    .social-icon { font-size: 1.1rem; }
+
+    /* divider */
+    .divider {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 28px;
+      animation: fadeUp .6s .12s ease both;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: .73rem; color: var(--muted2); text-transform: uppercase; letter-spacing: .08em; }
+
+    /* form */
+    form { animation: fadeUp .6s .16s ease both; }
+
+    .field { margin-bottom: 18px; }
+    .field-label {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .78rem; font-weight: 500; margin-bottom: 8px;
+      color: rgba(240,238,255,.75);
+    }
+    .field-label a { color: var(--muted); font-size: .75rem; text-decoration: none; transition: color .18s; }
+    .field-label a:hover { color: var(--accent); }
+
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%; padding: 14px 18px; padding-right: 50px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; color: var(--text);
+      font-family: var(--font-body); font-size: .9rem;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input::placeholder { color: var(--muted2); }
+    .input-wrap input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(255,61,110,.1);
+    }
+    .input-wrap input.error  { border-color: var(--border-error); box-shadow: 0 0 0 3px rgba(255,61,110,.12); }
+    .input-wrap input.success { border-color: var(--border-success); box-shadow: 0 0 0 3px rgba(0,229,195,.1); }
+
+    .input-icon {
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--muted2); font-size: .95rem; cursor: none; transition: color .18s;
+      background: none; border: none; padding: 0;
+    }
+    .input-icon:hover { color: var(--muted); }
+
+    .field-msg {
+      font-size: .72rem; margin-top: 6px; padding-left: 4px;
+      min-height: 16px; transition: all .2s;
+    }
+    .field-msg.error   { color: var(--error);  }
+    .field-msg.success { color: var(--success); }
+
+    /* remember row */
+    .remember-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 24px;
+    }
+    .custom-check { position: relative; }
+    .custom-check input[type="checkbox"] { opacity: 0; width: 0; height: 0; position: absolute; }
+    .checkmark {
+      width: 18px; height: 18px; border-radius: 6px;
+      border: 1.5px solid var(--border); background: var(--card);
+      display: flex; align-items: center; justify-content: center;
+      cursor: none; transition: all .18s; flex-shrink: 0;
+    }
+    .custom-check input:checked + .checkmark {
+      background: var(--accent); border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(255,61,110,.3);
+    }
+    .custom-check input:checked + .checkmark::after {
+      content: '✓'; color: #fff; font-size: .7rem; font-weight: 700;
+    }
+    .remember-label { font-size: .8rem; color: var(--muted); cursor: none; }
+
+    /* submit btn */
+    .btn-submit {
+      width: 100%; padding: 15px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 14px; font-family: var(--font-head); font-size: 1rem;
+      font-weight: 600; letter-spacing: -.01em; cursor: none;
+      transition: transform .2s, box-shadow .2s, background .2s;
+      box-shadow: 0 0 32px rgba(255,61,110,.32);
+      position: relative; overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .btn-submit::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.12) 0%, transparent 60%);
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(255,61,110,.5); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit.loading { background: var(--accent2); pointer-events: none; }
+    .btn-submit.loading .btn-text { opacity: 0; }
+    .btn-submit.loading::before {
+      content: ''; position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* spinner inside button */
+    .btn-spinner {
+      display: none; position: absolute; inset: 0;
+      align-items: center; justify-content: center;
+    }
+    .btn-submit.loading .btn-spinner { display: flex; }
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spinLoader .7s linear infinite;
+    }
+    @keyframes spinLoader { to{transform:rotate(360deg)} }
+
+    /* sign up link */
+    .switch-auth { text-align: center; font-size: .83rem; color: var(--muted); }
+    .switch-auth a { color: var(--accent); text-decoration: none; font-weight: 500; transition: opacity .18s; }
+    .switch-auth a:hover { opacity: .75; }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 22px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      font-size: .85rem; z-index: 1000;
+      transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      opacity: 0; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+    .toast-icon { font-size: 1.1rem; }
+    .toast.success { border-color: rgba(0,229,195,.3); }
+    .toast.error-toast { border-color: rgba(255,61,110,.3); }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- ═══ LEFT — VISUAL PANEL ═════════════════════ -->
+  <div class="visual-panel">
+    <a href="index.html" class="vp-logo">Melod<span>ify</span></a>
+
+    <!-- Floating info cards -->
+    <div class="float-card fc-top">
+      <div class="fc-dot"></div>
+      <div class="fc-icon">🎵</div>
+      <div><div class="fc-label">Now Streaming</div><div class="fc-val">4.2M listeners</div></div>
+    </div>
+    <div class="float-card fc-bot">
+      <div class="fc-icon">🔥</div>
+      <div><div class="fc-label">Trending Right Now</div><div class="fc-val">Neon Horizon — Parallax Echo</div></div>
+    </div>
+
+    <!-- Vinyl -->
+    <div class="vinyl-wrap">
+      <div class="vinyl-outer-ring"></div>
+      <div class="vinyl">
+        <div class="vinyl-label">
+          <div class="vinyl-center">LW</div>
+        </div>
+      </div>
+      <div class="tone-arm"></div>
+    </div>
+
+    <!-- EQ bars -->
+    <div class="eq-bars" id="eqBars"></div>
+
+    <!-- Bottom copy -->
+    <div class="vp-copy">
+      <div class="vp-copy-title">
+        Welcome<br>
+        <span class="outline">Back.</span>
+      </div>
+      <div class="vp-copy-sub">Your music, your library, your vibe — pick up exactly where you left off.</div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT — FORM PANEL ══════════════════════ -->
+  <div class="form-panel">
+    <div class="form-inner">
+
+      <div class="form-header">
+        <div class="form-eyebrow">✦ Welcome back</div>
+        <h1 class="form-title">Log In</h1>
+        <p class="form-subtitle">New to Melodify? <a href="signup.html">Create a free account →</a></p>
+      </div>
+
+      <!-- Social -->
+      <div class="social-row">
+        <button class="social-btn" onclick="socialLogin('Google')">
+          <span class="social-icon">🔴</span> Google
+        </button>
+        <button class="social-btn" onclick="socialLogin('Apple')">
+          <span class="social-icon">⚫</span> Apple
+        </button>
+      </div>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">or continue with email</div>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" novalidate>
+
+        <div class="field">
+          <div class="field-label"><span>Email address</span></div>
+          <div class="input-wrap">
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"/>
+            <span class="input-icon" id="emailIcon">✉</span>
+          </div>
+          <div class="field-msg" id="emailMsg"></div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <span>Password</span>
+            <a href="#">Forgot password?</a>
+          </div>
+          <div class="input-wrap">
+            <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password"/>
+            <button type="button" class="input-icon" id="pwToggle" onclick="togglePw('loginPassword','pwToggle')">👁</button>
+          </div>
+          <div class="field-msg" id="pwMsg"></div>
+        </div>
+
+        <div class="remember-row">
+          <label class="custom-check">
+            <input type="checkbox" id="rememberMe"/>
+            <div class="checkmark"></div>
+          </label>
+          <span class="remember-label" onclick="document.getElementById('rememberMe').click()">Keep me logged in</span>
+        </div>
+
+        <button type="submit" class="btn-submit" id="loginBtn">
+          <span class="btn-text">Log In</span>
+          <div class="btn-spinner"><div class="spinner"></div></div>
+        </button>
+
+        <div class="switch-auth">Don't have an account? <a href="signup.html">Sign up free</a></div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toastIcon">✓</span>
+    <span id="toastMsg">Logged in successfully!</span>
+  </div>
+
+  <script>
+    /* ── Cursor ─────────────────────────────────── */
+    const cursor = document.getElementById('cursor');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+    (function tick(){
+      rx+=(mx-rx)*0.13; ry+=(my-ry)*0.13;
+      cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+      ring.style.left=rx+'px'; ring.style.top=ry+'px';
+      requestAnimationFrame(tick);
+    })();
+
+    /* ── EQ bars ─────────────────────────────────── */
+    const eqWrap = document.getElementById('eqBars');
+    const eqH = [18,30,42,28,48,36,22,44,32,20,38,26];
+    eqH.forEach((h,i) => {
+      const b = document.createElement('div');
+      b.className = 'eq-bar';
+      b.style.cssText = `--h:${h}px;--d:${(.4+Math.random()*.5).toFixed(2)}s;--dl:${(i*.07).toFixed(2)}s`;
+      eqWrap.appendChild(b);
+    });
+
+    /* ── Show/hide password ───────────────────────── */
+    function togglePw(inputId, btnId) {
+      const inp = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+      else { inp.type = 'password'; btn.textContent = '👁'; }
+    }
+
+    /* ── Validation helpers ───────────────────────── */
+    function setFieldState(inputEl, msgEl, state, msg) {
+      inputEl.className = state; // 'error' | 'success' | ''
+      msgEl.textContent = msg;
+      msgEl.className = 'field-msg ' + (state === 'error' ? 'error' : state === 'success' ? 'success' : '');
+    }
+
+    function validateEmail(val) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    }
+
+    /* ── Real-time validation ─────────────────────── */
+    const loginEmail    = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const emailMsg  = document.getElementById('emailMsg');
+    const pwMsg     = document.getElementById('pwMsg');
+
+    loginEmail.addEventListener('blur', () => {
+      if (!loginEmail.value) return setFieldState(loginEmail, emailMsg, 'error', '⚠ Email is required');
+      if (!validateEmail(loginEmail.value)) return setFieldState(loginEmail, emailMsg, 'error', '⚠ Enter a valid email address');
+      setFieldState(loginEmail, emailMsg, 'success', '✓ Looks good');
+    });
+    loginEmail.addEventListener('input', () => {
+      if (loginEmail.classList.contains('error')) {
+        if (validateEmail(loginEmail.value)) setFieldState(loginEmail, emailMsg, 'success', '✓ Looks good');
+      }
+    });
+    loginPassword.addEventListener('blur', () => {
+      if (!loginPassword.value) return setFieldState(loginPassword, pwMsg, 'error', '⚠ Password is required');
+      if (loginPassword.value.length < 6) return setFieldState(loginPassword, pwMsg, 'error', '⚠ Password must be at least 6 characters');
+      setFieldState(loginPassword, pwMsg, 'success', '✓ Password entered');
+    });
+
+    /* ── Form submit ──────────────────────────────── */
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      let valid = true;
+
+      if (!loginEmail.value || !validateEmail(loginEmail.value)) {
+        setFieldState(loginEmail, emailMsg, 'error', !loginEmail.value ? '⚠ Email is required' : '⚠ Enter a valid email address');
+        valid = false;
+      }
+      if (!loginPassword.value || loginPassword.value.length < 6) {
+        setFieldState(loginPassword, pwMsg, 'error', !loginPassword.value ? '⚠ Password is required' : '⚠ Password must be at least 6 characters');
+        valid = false;
+      }
+      if (!valid) return;
+
+      const btn = document.getElementById('loginBtn');
+      btn.classList.add('loading');
+
+      // Simulate API call
+      try {
+  const res = await fetch("http://localhost:5000/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: loginEmail.value,
+      password: loginPassword.value
+    })
+  });
+
+  const data = await res.json();
+
+  btn.classList.remove('loading');
+
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+
+    showToast('success', '🎵', 'Welcome back! Redirecting...');
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 2000);
+
+  } else {
+    showToast('error', '⚠', data.message || "Login failed");
+  }
+
+} catch (err) {
+  btn.classList.remove('loading');
+  showToast('error', '⚠', 'Server error. Try again.');
+}
+
+      // Demo: always succeed
+      showToast('success', '🎵', 'Welcome back! Redirecting to your library…');
+      setTimeout(() => { window.location.href = 'library.html'; }, 2200);
+    });
+
+    /* ── Social login ─────────────────────────────── */
+    function socialLogin(provider) {
+      showToast('success', provider === 'Google' ? '🔴' : '⚫', `Connecting to ${provider}…`);
+    }
+
+    /* ── Toast ────────────────────────────────────── */
+    function showToast(type, icon, msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastIcon').textContent = icon;
+      document.getElementById('toastMsg').textContent = msg;
+      t.className = `toast ${type === 'error' ? 'error-toast' : 'success'} show`;
+      setTimeout(() => { t.classList.remove('show'); }, 3500);
+    }
+  </script>
+</body>
+</html>
