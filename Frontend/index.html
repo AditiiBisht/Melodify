@@ -2,19 +2,21 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Melodify — Feel Every Beat</title>
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Syne&family=DM+Sans&display=swap" rel="stylesheet" />
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/animation.css">
-      <link rel="stylesheet" href="css/utilities.css">
+   <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Melodify — Feel Every Beat</title>
+  
+  <!-- FIXED FONTS -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  
+  <!-- CSS files -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animation.css">
+  <link rel="stylesheet" href="css/utilities.css">
+</head>
 </head>
 
 <body>
@@ -22,10 +24,10 @@
   <nav>
     <a href="#" class="nav-logo">Melod<span>ify</span></a>
     <ul class="nav-links">
-      <li><a href="#">Discover</a></li>
-      <li><a href="#">Library</a></li>
-      <li><a href="#">Artists</a></li>
-      <li><a href="#">Podcasts</a></li>
+      <li><a href="discover.html">Discover</a></li>
+<li><a href="library.html">Library</a></li>
+<li><a href="artists.html">Artists</a></li>
+<li><a href="podcasts.html">Podcasts</a></li>
     </ul>
     <div class="nav-cta">
       <button class="btn-ghost">Log in</button>
@@ -390,8 +392,6 @@
       ry += (my - ry) * 0.12;
       cursor.style.left = mx - 6 + 'px';
       cursor.style.top = my - 6 + 'px';
-      ring.style.left = rx - 18 + 'px';
-      ring.style.top = ry - 18 + 'px';
       requestAnimationFrame(animateCursor);
     }
     animateCursor();

@@ -151,6 +151,99 @@ document.querySelectorAll('.chip').forEach(chip => {
   });
 });
 
+// songssss 
+
+const songs = [
+
+{
+ title: "Neon Dreams",
+ artist: "Luna Wave",
+ album: "After Midnight",
+ duration: "4:05",
+ liked: true,
+ color: "ta1"
+},
+
+{
+ title: "Violet Frequency",
+ artist: "Parallax Echo",
+ album: "Echoes",
+ duration: "3:42",
+ liked: true,
+ color: "ta2"
+},
+
+{
+ title: "Rainy Afternoon",
+ artist: "Cozy Beats Lab",
+ album: "Rainy Days Vol.4",
+ duration: "4:15",
+ liked: false,
+ color: "ta3"
+},
+
+{
+ title: "Desert Sun",
+ artist: "Atlas Groove",
+ album: "Desert Sun",
+ duration: "3:58",
+ liked: true,
+ color: "ta4"
+}
+
+];
+
+const trackList =
+document.getElementById('trackList');
+
+songs.forEach((song,index)=>{
+
+trackList.innerHTML += `
+
+<div class="track-row">
+
+<div class="tr-num">
+${index + 1}
+</div>
+
+<div class="tr-art">
+<div class="tr-art-bg ${song.color}"></div>
+</div>
+
+<div class="tr-info">
+
+<div class="tr-name">
+${song.title}
+</div>
+
+<div class="tr-artist">
+${song.artist}
+</div>
+
+</div>
+
+<div class="tr-album">
+${song.album}
+</div>
+
+<div class="tr-date">
+Today
+</div>
+
+<div class="tr-heart ${song.liked ? 'liked' : ''}">
+${song.liked ? '♥' : '♡'}
+</div>
+
+<div class="tr-dur">
+${song.duration}
+</div>
+
+</div>
+
+`;
+
+});
+
 // ===== SCROLL ANIMATION =====
 const revealElements = document.querySelectorAll('.fade-up');
 
