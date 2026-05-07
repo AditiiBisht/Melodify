@@ -52,11 +52,6 @@
       z-index: 9999; mix-blend-mode: screen; transform: translate(-50%,-50%);
       transition: width .2s, height .2s, background .2s;
     }
-    .cursor-ring {
-      width: 34px; height: 34px; border: 1.5px solid rgba(255,61,110,.45);
-      border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998;
-      transform: translate(-50%,-50%); transition: width .25s, height .25s;
-    }
     body:has(.track-row:hover) .cursor,
     body:has(.album-card:hover) .cursor { background: var(--accent3); width: 14px; height: 14px; }
 
@@ -1058,7 +1053,6 @@
   <script>
     /* ── Cursor ─────────────────────────────────── */
     const cursor = document.getElementById('cursor');
-    const ring   = document.getElementById('cursorRing');
     let mx=0,my=0,rx=0,ry=0;
     document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
     (function tick(){
@@ -1113,6 +1107,7 @@
       pbEq.appendChild(b);
     });
   </script>
-
+ <script src="js/auth.js"></script>
+<script src="js/player.js"></script>
 </body>
 </html>

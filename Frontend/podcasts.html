@@ -1,45 +1,1252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Melodify</title>
+  <title>Melodify — Podcasts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+    :root {
+      --bg: #080810;
+      --surface: #0d0d1a;
+      --card: #11111e;
+      --card2: #151528;
+      --border: rgba(255,255,255,0.07);
+      --accent: #ff3d6e;
+      --accent2: #7b5ea7;
+      --accent3: #00e5c3;
+      --accent4: #f5a623;
+      --text: #f0eeff;
+      --muted: #6a6a95;
+      --muted2: #4a4a70;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
 
-  <!-- Global CSS -->
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/utilities.css">
-  <link rel="stylesheet" href="css/animation.css">
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden; cursor: none; min-height: 100vh;
+    }
+
+    /* ── ambient mesh ─────────────────────────────── */
+    .mesh {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 5% 10%,  rgba(123,94,167,.15) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 45% at 92% 85%, rgba(0,229,195,.1)   0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,61,110,.05) 0%, transparent 65%);
+    }
+
+    /* ── cursor ───────────────────────────────────── */
+    .cursor {
+      width: 10px; height: 10px; background: var(--accent3);
+      border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999;
+      mix-blend-mode: screen; transform: translate(-50%,-50%);
+      transition: width .18s, height .18s, background .2s;
+    }
+    .cursor-ring {
+      width: 32px; height: 32px; border: 1.5px solid rgba(0,229,195,.4);
+      border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+    }
+    body:has(.pod-card:hover)     .cursor { background: var(--accent);  width: 14px; height: 14px; }
+    body:has(.ep-row:hover)       .cursor { background: var(--accent3); }
+    body:has(.btn-subscribe:hover).cursor { width: 16px; height: 16px; }
+
+    /* ── NAV ──────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 60px; height: 68px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(28px) saturate(1.6);
+      background: rgba(8,8,16,.82);
+    }
+    .nav-logo { font-family: var(--font-head); font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .85rem; letter-spacing: .04em; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .btn-ghost { color: var(--muted); background: none; border: none; font-family: var(--font-body); font-size: .85rem; cursor: none; transition: color .2s; }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-pill { background: var(--accent); color: #fff; border: none; border-radius: 100px; padding: 9px 20px; font-family: var(--font-body); font-size: .85rem; font-weight: 500; cursor: none; transition: background .2s, transform .15s; }
+    .btn-pill:hover { background: #ff1a57; transform: scale(1.04); }
+
+    /* ── MAIN ─────────────────────────────────────── */
+    main { position: relative; z-index: 1; padding-top: 68px; }
+
+    /* ══════════════════════════════════════════════
+       HERO — FEATURED PODCAST
+    ══════════════════════════════════════════════ */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 70px 60px 64px;
+      display: grid; grid-template-columns: 1fr 420px;
+      align-items: center; gap: 60px;
+      min-height: 520px;
+    }
+
+    /* animated soundwave background */
+    .hero-wave-bg {
+      position: absolute; inset: 0; z-index: 0;
+      display: flex; align-items: center; gap: 3px;
+      padding: 0 40px; opacity: .035; pointer-events: none;
+    }
+    .hwb-bar {
+      flex: 1; background: var(--accent3); border-radius: 2px;
+      animation: hwbPulse var(--d,.9s) ease-in-out infinite alternate;
+      animation-delay: var(--dl,0s);
+    }
+    @keyframes hwbPulse { from{height:6px} to{height:var(--h,80px)} }
+
+    /* orbs */
+    .hero-orb {
+      position: absolute; border-radius: 50%; filter: blur(100px);
+      pointer-events: none; animation: orbDrift var(--d,9s) ease-in-out infinite alternate;
+    }
+    .ho1 { width:500px; height:500px; top:-150px; left:-100px; background:radial-gradient(circle,rgba(0,229,195,.18),transparent 70%); --d:11s; }
+    .ho2 { width:380px; height:380px; bottom:-100px; right:80px;  background:radial-gradient(circle,rgba(123,94,167,.2),transparent 70%); --d:8s; }
+    @keyframes orbDrift { from{transform:translate(0,0)} to{transform:translate(28px,18px)} }
+
+    .hero-left { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,229,195,.1); border: 1px solid rgba(0,229,195,.25);
+      border-radius: 100px; padding: 5px 15px;
+      font-size: .72rem; color: var(--accent3); letter-spacing: .1em; text-transform: uppercase;
+      margin-bottom: 22px; animation: fadeUp .7s ease both;
+    }
+    .hero-eyebrow .dot { width: 6px; height: 6px; background: var(--accent3); border-radius: 50%; animation: blink 1.4s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    .hero-title {
+      font-family: var(--font-head); font-size: clamp(2.8rem,5vw,5rem);
+      font-weight: 800; letter-spacing: -.045em; line-height: 1.0;
+      margin-bottom: 6px; animation: fadeUp .7s .08s ease both;
+    }
+    .hero-title .outline {
+      display: block;
+      -webkit-text-stroke: 1.5px rgba(240,238,255,.35); color: transparent;
+    }
+    .hero-host {
+      font-size: 1rem; color: var(--muted); margin-bottom: 20px;
+      animation: fadeUp .7s .14s ease both;
+    }
+    .hero-host strong { color: var(--text); font-weight: 500; }
+    .hero-tags {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+      animation: fadeUp .7s .18s ease both;
+    }
+    .hero-tag {
+      padding: 5px 14px; border-radius: 100px;
+      border: 1px solid var(--border); background: rgba(255,255,255,.04);
+      font-size: .75rem; color: var(--muted);
+    }
+    .hero-desc {
+      font-size: .95rem; color: var(--muted); line-height: 1.72;
+      max-width: 460px; font-weight: 300; margin-bottom: 36px;
+      animation: fadeUp .7s .22s ease both;
+    }
+    .hero-actions {
+      display: flex; align-items: center; gap: 14px;
+      animation: fadeUp .7s .28s ease both;
+    }
+    .btn-listen {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--accent3); color: #080810;
+      border: none; border-radius: 100px; padding: 14px 28px;
+      font-family: var(--font-head); font-size: .95rem; font-weight: 700;
+      cursor: none; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 0 32px rgba(0,229,195,.3); letter-spacing: -.01em;
+    }
+    .btn-listen:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,229,195,.5); }
+    .btn-subscribe {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.07); color: var(--text);
+      border: 1px solid var(--border); border-radius: 100px; padding: 14px 24px;
+      font-family: var(--font-body); font-size: .9rem; cursor: none;
+      transition: background .2s, border-color .2s;
+    }
+    .btn-subscribe:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.18); }
+    .btn-subscribe.subscribed {
+      background: rgba(0,229,195,.1); border-color: rgba(0,229,195,.35); color: var(--accent3);
+    }
+
+    .hero-stats-row {
+      display: flex; gap: 32px; margin-top: 44px;
+      animation: fadeUp .7s .34s ease both;
+    }
+    .hs-num {
+      font-family: var(--font-head); font-size: 1.5rem; font-weight: 800;
+      letter-spacing: -.04em;
+    }
+    .hs-num.a { color: var(--accent3); }
+    .hs-num.b { color: var(--accent2); }
+    .hs-num.c { color: var(--accent4); }
+    .hs-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
+
+    /* ── FEATURED PODCAST CARD (right) ─────────────── */
+    .hero-right {
+      position: relative; z-index: 1;
+      animation: fadeIn .9s .4s ease both;
+    }
+    .featured-pod-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 28px; overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,.5);
+    }
+    .fpc-art {
+      width: 100%; aspect-ratio: 1;
+      background: linear-gradient(145deg, #001a14, #004d3a, #009966, #00e5c3);
+      position: relative; overflow: hidden;
+    }
+    .fpc-art-pattern {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent, transparent 10px,
+        rgba(255,255,255,.03) 10px, rgba(255,255,255,.03) 20px
+      );
+    }
+    .fpc-art-mic {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem; opacity: .2;
+    }
+    /* waveform in art */
+    .fpc-waveform {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 60px; display: flex; align-items: flex-end;
+      gap: 2px; padding: 0 16px 10px;
+      background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
+    }
+    .fpc-wv-bar {
+      flex: 1; border-radius: 2px; background: var(--accent3); opacity: .6;
+      animation: fpcWv var(--d,.7s) ease-in-out infinite alternate;
+      animation-delay: var(--dl,0s);
+    }
+    @keyframes fpcWv { from{height:4px} to{height:var(--h,28px)} }
+
+    .fpc-body { padding: 22px 24px; }
+    .fpc-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--accent3); margin-bottom: 8px; }
+    .fpc-title { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; letter-spacing: -.03em; margin-bottom: 6px; }
+    .fpc-ep { font-size: .8rem; color: var(--muted); margin-bottom: 18px; }
+
+    /* mini progress player */
+    .mini-player { }
+    .mp-track-name { font-size: .82rem; font-weight: 500; margin-bottom: 4px; }
+    .mp-track-ep   { font-size: .72rem; color: var(--muted); margin-bottom: 14px; }
+    .mp-bar-wrap   { background: rgba(255,255,255,.08); border-radius: 10px; height: 4px; margin-bottom: 6px; overflow: hidden; cursor: none; }
+    .mp-bar-fill   { height: 100%; width: 38%; background: linear-gradient(90deg, var(--accent2), var(--accent3)); border-radius: 10px; }
+    .mp-time-row   { display: flex; justify-content: space-between; font-size: .68rem; color: var(--muted); margin-bottom: 16px; }
+    .mp-controls   { display: flex; align-items: center; justify-content: space-between; }
+    .mp-ctrl-btn   { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: none; transition: color .18s; }
+    .mp-ctrl-btn:hover { color: var(--text); }
+    .mp-play-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--accent3); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: none; transition: transform .18s, box-shadow .18s;
+      box-shadow: 0 0 24px rgba(0,229,195,.4);
+    }
+    .mp-play-btn:hover { transform: scale(1.08); }
+    /* speed badge */
+    .mp-speed { font-size: .7rem; background: rgba(255,255,255,.08); color: var(--muted); border-radius: 6px; padding: 3px 8px; cursor: none; transition: background .18s; }
+    .mp-speed:hover { background: rgba(255,255,255,.14); color: var(--text); }
+
+    /* ══════════════════════════════════════════════
+       CATEGORY FILTER
+    ══════════════════════════════════════════════ */
+    .cat-strip {
+      padding: 0 60px 48px;
+      display: flex; align-items: center; gap: 10px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .cat-strip::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      flex-shrink: 0; padding: 10px 20px; border-radius: 100px;
+      border: 1px solid var(--border); background: var(--card);
+      font-size: .8rem; font-weight: 500; color: var(--muted);
+      cursor: none; transition: all .2s;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .cat-chip:hover { border-color: rgba(255,255,255,.18); color: var(--text); }
+    .cat-chip.active {
+      background: var(--accent3); color: #080810;
+      border-color: var(--accent3); font-weight: 700;
+      box-shadow: 0 0 20px rgba(0,229,195,.28);
+    }
+
+    /* ══════════════════════════════════════════════
+       SECTION HEADERS
+    ══════════════════════════════════════════════ */
+    .sec-wrap  { padding: 0 60px 60px; }
+    .sec-head  { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 26px; }
+    .sec-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--accent3); margin-bottom: 8px; }
+    .sec-title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 800; letter-spacing: -.03em; }
+    .see-all   { color: var(--muted); font-size: .8rem; text-decoration: none; transition: color .2s; }
+    .see-all:hover { color: var(--text); }
+
+    /* ══════════════════════════════════════════════
+       PODCAST CARDS GRID
+    ══════════════════════════════════════════════ */
+    .pods-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 20px;
+    }
+    .pod-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 22px; overflow: hidden;
+      cursor: none; transition: transform .3s, border-color .3s, box-shadow .3s;
+    }
+    .pod-card:hover {
+      transform: translateY(-7px);
+      border-color: rgba(0,229,195,.25);
+      box-shadow: 0 24px 60px rgba(0,0,0,.4);
+    }
+    .pod-art {
+      width: 100%; aspect-ratio: 1;
+      position: relative; overflow: hidden;
+    }
+    .pod-art-bg { width: 100%; height: 100%; }
+    .pa1  { background: linear-gradient(145deg,#001a14,#004d3a,#00e5c3); }
+    .pa2  { background: linear-gradient(145deg,#001426,#003d6b,#0090ff); }
+    .pa3  { background: linear-gradient(145deg,#1a0014,#5a003a,#ff006b); }
+    .pa4  { background: linear-gradient(145deg,#0d1b0a,#1b4332,#38ef7d); }
+    .pa5  { background: linear-gradient(145deg,#1a1a00,#4d4d00,#ffd700); }
+    .pa6  { background: linear-gradient(145deg,#1a0500,#6b2000,#ff6b35); }
+    .pa7  { background: linear-gradient(145deg,#0a0a2e,#191970,#6666ff); }
+    .pa8  { background: linear-gradient(145deg,#0d0019,#330066,#b366ff); }
+
+    .pod-art-pattern {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        -45deg, transparent, transparent 12px,
+        rgba(255,255,255,.025) 12px, rgba(255,255,255,.025) 24px
+      );
+    }
+    .pod-art-icon {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem; opacity: .22;
+    }
+    .pod-art-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .pod-card:hover .pod-art-overlay { background: rgba(0,0,0,.5); }
+    .pod-play-btn {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent3); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: none; opacity: 0; transform: scale(.7);
+      transition: opacity .2s, transform .2s;
+      box-shadow: 0 8px 28px rgba(0,229,195,.5);
+    }
+    .pod-card:hover .pod-play-btn { opacity: 1; transform: scale(1); }
+
+    /* new ep badge */
+    .pod-new-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--accent3); color: #080810;
+      font-size: .62rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; padding: 3px 9px; border-radius: 100px;
+    }
+    /* category badge */
+    .pod-cat-badge {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(8,8,16,.7); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.12);
+      font-size: .62rem; color: rgba(240,238,255,.7);
+      padding: 3px 9px; border-radius: 100px; letter-spacing: .04em;
+    }
+
+    .pod-body { padding: 16px 18px 20px; }
+    .pod-name { font-family: var(--font-head); font-size: 1rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 4px; }
+    .pod-host { font-size: .76rem; color: var(--muted); margin-bottom: 12px; }
+    .pod-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .pod-eps  { font-size: .73rem; color: var(--muted); }
+    .pod-freq { font-size: .7rem; color: var(--accent3); background: rgba(0,229,195,.1); padding: 3px 9px; border-radius: 100px; }
+    .pod-sub-btn {
+      width: 100%; padding: 10px; border-radius: 100px;
+      font-family: var(--font-body); font-size: .8rem; font-weight: 500;
+      cursor: none; transition: all .22s; border: 1px solid var(--border);
+      background: rgba(255,255,255,.05); color: var(--text);
+    }
+    .pod-sub-btn:hover { background: var(--accent3); border-color: var(--accent3); color: #080810; font-weight: 700; box-shadow: 0 0 18px rgba(0,229,195,.28); }
+    .pod-sub-btn.subbed { background: rgba(0,229,195,.1); border-color: rgba(0,229,195,.35); color: var(--accent3); }
+
+    /* ══════════════════════════════════════════════
+       LATEST EPISODES — wide list
+    ══════════════════════════════════════════════ */
+    .episodes-section { padding: 0 60px 60px; }
+    .ep-list { display: flex; flex-direction: column; gap: 6px; }
+    .ep-row {
+      display: grid;
+      grid-template-columns: 70px 1fr auto auto auto;
+      align-items: center; gap: 20px;
+      padding: 14px 20px; border-radius: 16px;
+      cursor: none; transition: background .18s;
+    }
+    .ep-row:hover { background: var(--card); }
+    .ep-row.playing-ep { background: rgba(0,229,195,.07); }
+    .ep-row.playing-ep .ep-title { color: var(--accent3); }
+
+    .ep-art {
+      width: 64px; height: 64px; border-radius: 14px;
+      position: relative; overflow: hidden; flex-shrink: 0;
+    }
+    .ep-art-bg { width: 100%; height: 100%; }
+    .epa1 { background: linear-gradient(135deg,#001a14,#00e5c3); }
+    .epa2 { background: linear-gradient(135deg,#001426,#0090ff); }
+    .epa3 { background: linear-gradient(135deg,#1a0014,#ff006b); }
+    .epa4 { background: linear-gradient(135deg,#0d1b0a,#38ef7d); }
+    .epa5 { background: linear-gradient(135deg,#1a1a00,#ffd700); }
+    .epa6 { background: linear-gradient(135deg,#1a0500,#ff6b35); }
+    .epa7 { background: linear-gradient(135deg,#0a0a2e,#6666ff); }
+
+    /* playing bars on episode art */
+    .ep-play-bars {
+      display: none; position: absolute; inset: 0;
+      align-items: flex-end; justify-content: center;
+      gap: 2px; padding: 10px;
+      background: rgba(0,0,0,.55);
+    }
+    .ep-row.playing-ep .ep-play-bars { display: flex; }
+    .epb { width: 4px; background: var(--accent3); border-radius: 2px; animation: epbAnim var(--d,.55s) ease-in-out infinite alternate; }
+    @keyframes epbAnim { from{height:4px} to{height:var(--h,18px)} }
+
+    .ep-info { min-width: 0; }
+    .ep-show { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+    .ep-title { font-size: .95rem; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ep-desc  { font-size: .75rem; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .ep-date { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+    .ep-dur  { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+    .ep-actions {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ep-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--card2);
+      color: var(--muted); font-size: .8rem;
+      cursor: none; display: flex; align-items: center; justify-content: center;
+      transition: all .18s;
+    }
+    .ep-btn:hover { border-color: var(--accent3); color: var(--accent3); background: rgba(0,229,195,.08); }
+    .ep-btn.saved { border-color: rgba(0,229,195,.35); color: var(--accent3); background: rgba(0,229,195,.1); }
+    .ep-play-circle {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent3); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: none; transition: transform .18s, box-shadow .18s;
+      box-shadow: 0 0 18px rgba(0,229,195,.3);
+    }
+    .ep-play-circle:hover { transform: scale(1.1); }
+    .ep-row.playing-ep .ep-play-circle { background: rgba(0,229,195,.2); }
+
+    /* new dot */
+    .ep-new-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--accent3);
+      flex-shrink: 0; animation: blink 1.4s infinite;
+    }
+
+    /* load more */
+    .load-more-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; margin-top: 16px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px; color: var(--muted);
+      font-family: var(--font-body); font-size: .85rem;
+      cursor: none; transition: all .2s;
+    }
+    .load-more-btn:hover { border-color: rgba(255,255,255,.15); color: var(--text); }
+
+    /* ══════════════════════════════════════════════
+       TOP CHARTS — 2-col
+    ══════════════════════════════════════════════ */
+    .charts-section { padding: 0 60px 60px; }
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .chart-panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 24px; overflow: hidden;
+    }
+    .chart-header {
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .chart-title { font-family: var(--font-head); font-size: 1.05rem; font-weight: 800; letter-spacing: -.02em; }
+    .chart-sub   { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .chart-badge {
+      padding: 4px 12px; border-radius: 100px;
+      font-size: .67rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .cb-teal { background: rgba(0,229,195,.1); color: var(--accent3); border: 1px solid rgba(0,229,195,.2); }
+    .cb-purple { background: rgba(123,94,167,.12); color: var(--accent2); border: 1px solid rgba(123,94,167,.25); }
+
+    .chart-list { padding: 8px 0; }
+    .chart-row {
+      display: grid; grid-template-columns: 32px 50px 1fr auto;
+      align-items: center; gap: 14px;
+      padding: 10px 24px; cursor: none; transition: background .16s;
+    }
+    .chart-row:hover { background: rgba(255,255,255,.03); }
+    .cr-num { font-family: var(--font-head); font-size: .8rem; font-weight: 700; color: var(--muted); text-align: center; }
+    .cr-art { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; position: relative; }
+    .cr-art-bg { width: 100%; height: 100%; }
+    .cra1 { background: linear-gradient(135deg,#001a14,#00e5c3); }
+    .cra2 { background: linear-gradient(135deg,#001426,#0090ff); }
+    .cra3 { background: linear-gradient(135deg,#1a0014,#ff006b); }
+    .cra4 { background: linear-gradient(135deg,#0d1b0a,#38ef7d); }
+    .cra5 { background: linear-gradient(135deg,#1a1a00,#ffd700); }
+    .cra6 { background: linear-gradient(135deg,#1a0500,#ff6b35); }
+    .cra7 { background: linear-gradient(135deg,#0a0a2e,#6666ff); }
+    .cra8 { background: linear-gradient(135deg,#0d0019,#b366ff); }
+    .cra9 { background: linear-gradient(135deg,#001a14,#38ef7d); }
+    .cra10{ background: linear-gradient(135deg,#1a0014,#ffd700); }
+    .cr-info-name { font-size: .86rem; font-weight: 500; }
+    .cr-info-host { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .cr-listeners  { font-size: .72rem; color: var(--muted); white-space: nowrap; }
+
+    /* ══════════════════════════════════════════════
+       DISCOVER TOPICS
+    ══════════════════════════════════════════════ */
+    .topics-section { padding: 0 60px 60px; }
+    .topics-grid {
+      display: grid; grid-template-columns: repeat(6,1fr); gap: 12px;
+    }
+    .topic-card {
+      border-radius: 18px; aspect-ratio: 4/5;
+      position: relative; overflow: hidden;
+      cursor: none; transition: transform .28s;
+    }
+    .topic-card:hover { transform: scale(1.05); }
+    .topic-bg { width: 100%; height: 100%; }
+    .tb1 { background: linear-gradient(165deg,#001a14,#004d3a,#00e5c3); }
+    .tb2 { background: linear-gradient(165deg,#001426,#003d6b,#4da6ff); }
+    .tb3 { background: linear-gradient(165deg,#1a0014,#5a003a,#ff66b3); }
+    .tb4 { background: linear-gradient(165deg,#0d1b0a,#1b4332,#66ff99); }
+    .tb5 { background: linear-gradient(165deg,#1a1400,#4d3a00,#ffcc00); }
+    .tb6 { background: linear-gradient(165deg,#1a0500,#5a1a00,#ff8533); }
+    .topic-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.75) 0%, rgba(0,0,0,.1) 55%, transparent 100%);
+    }
+    /* dots pattern */
+    .topic-pattern {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,.12) 1px, transparent 1px);
+      background-size: 18px 18px; opacity: .5;
+    }
+    .topic-icon  { position: absolute; top: 16px; left: 16px; font-size: 1.5rem; z-index: 2; }
+    .topic-label {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+      padding: 14px; font-family: var(--font-head); font-size: .88rem; font-weight: 700;
+    }
+    .topic-count { font-size: .68rem; color: rgba(240,238,255,.5); margin-top: 2px; font-family: var(--font-body); font-weight: 300; }
+
+    /* ══════════════════════════════════════════════
+       NEWSLETTER BANNER
+    ══════════════════════════════════════════════ */
+    .newsletter-banner { padding: 0 60px 80px; }
+    .nb-inner {
+      border-radius: 28px; overflow: hidden; position: relative;
+      background: linear-gradient(130deg, #001a14 0%, #004d3a 30%, #009966 60%, #00e5c3 100%);
+      padding: 52px 60px;
+      display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px;
+    }
+    .nb-inner::before {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .nb-label { position: relative; z-index: 1; font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: rgba(255,255,255,.55); margin-bottom: 12px; }
+    .nb-title { position: relative; z-index: 1; font-family: var(--font-head); font-size: 2.4rem; font-weight: 800; letter-spacing: -.045em; line-height: 1.05; margin-bottom: 12px; color: #080810; }
+    .nb-sub   { position: relative; z-index: 1; font-size: .9rem; color: rgba(8,8,16,.65); line-height: 1.65; max-width: 400px; font-weight: 300; }
+    .nb-action { position: relative; z-index: 1; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+    .btn-nb-primary {
+      background: #080810; color: var(--accent3); border: none; border-radius: 100px;
+      padding: 14px 30px; font-family: var(--font-head); font-size: .95rem; font-weight: 700;
+      cursor: none; transition: transform .2s, box-shadow .2s; white-space: nowrap;
+    }
+    .btn-nb-primary:hover { transform: scale(1.04); box-shadow: 0 8px 28px rgba(0,0,0,.35); }
+    .btn-nb-sec {
+      background: rgba(8,8,16,.15); color: rgba(8,8,16,.75); border: 1px solid rgba(8,8,16,.2);
+      border-radius: 100px; padding: 14px 30px; font-family: var(--font-head);
+      font-size: .95rem; font-weight: 600; cursor: none; transition: background .2s;
+      white-space: nowrap; text-align: center;
+    }
+    .btn-nb-sec:hover { background: rgba(8,8,16,.25); }
+
+    /* wave decoration in banner */
+    .nb-wave { position: absolute; right: 340px; top: 0; bottom: 0; display: flex; align-items: center; gap: 4px; opacity: .08; z-index: 0; }
+    .nb-wbar { width: 5px; background: #080810; border-radius: 3px; animation: nbWv var(--d,.7s) ease-in-out infinite alternate; animation-delay: var(--dl,0s); }
+    @keyframes nbWv { from{height:6px} to{height:var(--h,60px)} }
+
+    /* ── FOOTER ───────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border); padding: 30px 60px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: relative; z-index: 1;
+    }
+    .footer-logo { font-family: var(--font-head); font-size: 1.1rem; font-weight: 800; text-decoration: none; color: var(--text); }
+    .footer-logo span { color: var(--accent); }
+    .footer-links { display: flex; gap: 22px; }
+    .footer-links a { font-size: .76rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: .76rem; color: var(--muted); }
+
+    /* ── ANIMATIONS ───────────────────────────────── */
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+
+    .reveal { opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease; }
+    .reveal.visible { opacity:1; transform:none; }
+
+    .stagger > * { opacity:0; transform:translateY(18px); transition:opacity .5s ease, transform .5s ease; }
+    .stagger.visible > *:nth-child(1){ opacity:1;transform:none;transition-delay:.04s }
+    .stagger.visible > *:nth-child(2){ opacity:1;transform:none;transition-delay:.10s }
+    .stagger.visible > *:nth-child(3){ opacity:1;transform:none;transition-delay:.16s }
+    .stagger.visible > *:nth-child(4){ opacity:1;transform:none;transition-delay:.22s }
+    .stagger.visible > *:nth-child(5){ opacity:1;transform:none;transition-delay:.28s }
+    .stagger.visible > *:nth-child(6){ opacity:1;transform:none;transition-delay:.34s }
+    .stagger.visible > *:nth-child(7){ opacity:1;transform:none;transition-delay:.40s }
+    .stagger.visible > *:nth-child(8){ opacity:1;transform:none;transition-delay:.46s }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.09); border-radius: 3px; }
+  </style>
 </head>
-
 <body>
 
-  <!-- NAVBAR (same in all pages) -->
+  <div class="mesh"></div>
+  <div class="cursor"      id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- ═══ NAV ════════════════════════════════════ -->
   <nav>
     <a href="index.html" class="nav-logo">Melod<span>ify</span></a>
-
     <ul class="nav-links">
       <li><a href="discover.html">Discover</a></li>
       <li><a href="library.html">Library</a></li>
       <li><a href="artists.html">Artists</a></li>
-      <li><a href="podcasts.html">Podcasts</a></li>
+      <li><a href="podcasts.html" class="active">Podcasts</a></li>
     </ul>
-
-    <div class="nav-cta">
+    <div class="nav-right">
       <button class="btn-ghost">Log in</button>
       <button class="btn-pill">Start Free Trial</button>
     </div>
   </nav>
 
-  <!-- PAGE CONTENT (we will build this later) -->
   <main>
-    <h1 style="padding: 120px 60px;">Page Content</h1>
+
+    <!-- ═══ HERO ════════════════════════════════ -->
+    <section class="hero">
+      <div class="hero-wave-bg" id="heroBg"></div>
+      <div class="hero-orb ho1"></div>
+      <div class="hero-orb ho2"></div>
+
+      <div class="hero-left">
+        <div class="hero-eyebrow"><div class="dot"></div>New Episode · Every Tuesday</div>
+        <h1 class="hero-title">
+          Sound Theory
+          <span class="outline">Podcast</span>
+        </h1>
+        <p class="hero-host">Hosted by <strong>Maya Chen</strong></p>
+        <div class="hero-tags">
+          <span class="hero-tag">🎵 Music</span>
+          <span class="hero-tag">🧠 Culture</span>
+          <span class="hero-tag">🎙️ Interviews</span>
+          <span class="hero-tag">Weekly</span>
+        </div>
+        <p class="hero-desc">Deep dives into the science, culture, and business of music. From how songs get stuck in your head to the economics of streaming — Sound Theory unpacks it all with candor and curiosity.</p>
+        <div class="hero-actions">
+          <button class="btn-listen" onclick="playFeatured()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="#080810"/></svg>
+            Play Latest Episode
+          </button>
+          <button class="btn-subscribe" id="heroSubBtn" onclick="toggleHeroSub()">
+            <span id="heroSubIcon">+</span> Subscribe
+          </button>
+        </div>
+        <div class="hero-stats-row">
+          <div><div class="hs-num a">142</div><div class="hs-label">Episodes</div></div>
+          <div><div class="hs-num b">2.8M</div><div class="hs-label">Subscribers</div></div>
+          <div><div class="hs-num c">4.9★</div><div class="hs-label">Rating</div></div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="featured-pod-card">
+          <div class="fpc-art">
+            <div class="fpc-art-pattern"></div>
+            <div class="fpc-art-mic">🎙️</div>
+            <div class="fpc-waveform" id="fpcWave"></div>
+          </div>
+          <div class="fpc-body">
+            <div class="fpc-label">🔴 Now Playing</div>
+            <div class="fpc-title">Sound Theory</div>
+            <div class="fpc-ep">with Maya Chen · 142 episodes</div>
+            <div class="mini-player">
+              <div class="mp-track-name">Ep.142 — The Algorithm Problem</div>
+              <div class="mp-track-ep">Why streaming recommendations are broken</div>
+              <div class="mp-bar-wrap"><div class="mp-bar-fill"></div></div>
+              <div class="mp-time-row"><span>24:18</span><span>62:44</span></div>
+              <div class="mp-controls">
+                <button class="mp-ctrl-btn" title="Rewind 15s">⏮</button>
+                <button class="mp-ctrl-btn" title="Back 15s">↺<sup style="font-size:.55rem">15</sup></button>
+                <button class="mp-play-btn" id="mpPlayBtn" onclick="toggleMpPlay()">
+                  <svg id="mpPlayIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="4" y="3" width="3" height="10" rx="1.5" fill="#080810"/>
+                    <rect x="9" y="3" width="3" height="10" rx="1.5" fill="#080810"/>
+                  </svg>
+                </button>
+                <button class="mp-ctrl-btn" title="Skip 30s">↻<sup style="font-size:.55rem">30</sup></button>
+                <button class="mp-speed" onclick="cycleSpeed(this)">1×</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ CATEGORY FILTER ══════════════════════ -->
+    <div class="cat-strip" id="catStrip">
+      <div class="cat-chip active" data-c="all">✦ All</div>
+      <div class="cat-chip" data-c="music">🎵 Music</div>
+      <div class="cat-chip" data-c="tech">💻 Technology</div>
+      <div class="cat-chip" data-c="culture">🌍 Culture</div>
+      <div class="cat-chip" data-c="business">📈 Business</div>
+      <div class="cat-chip" data-c="comedy">😂 Comedy</div>
+      <div class="cat-chip" data-c="wellness">🧘 Wellness</div>
+      <div class="cat-chip" data-c="true-crime">🔍 True Crime</div>
+      <div class="cat-chip" data-c="science">🔬 Science</div>
+      <div class="cat-chip" data-c="history">📜 History</div>
+    </div>
+
+    <!-- ═══ ALL PODCASTS GRID ════════════════════ -->
+    <div class="sec-wrap reveal">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">✦ Curated Selection</div>
+          <div class="sec-title">Top Podcasts</div>
+        </div>
+        <a href="#" class="see-all">Browse all →</a>
+      </div>
+      <div class="pods-grid stagger" id="podsGrid">
+
+        <div class="pod-card" data-cat="music">
+          <div class="pod-art">
+            <div class="pod-art-bg pa1"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">🎙️</div>
+            <div class="pod-new-badge">New Ep</div>
+            <div class="pod-cat-badge">Music</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">Sound Theory</div>
+            <div class="pod-host">with Maya Chen</div>
+            <div class="pod-meta">
+              <span class="pod-eps">142 episodes</span>
+              <span class="pod-freq">Weekly</span>
+            </div>
+            <button class="pod-sub-btn subbed" onclick="toggleSub(this)">✓ Subscribed</button>
+          </div>
+        </div>
+
+        <div class="pod-card" data-cat="tech">
+          <div class="pod-art">
+            <div class="pod-art-bg pa2"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">🎵</div>
+            <div class="pod-new-badge">New Ep</div>
+            <div class="pod-cat-badge">Tech</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">Bassline Stories</div>
+            <div class="pod-host">with DJ Nocturne</div>
+            <div class="pod-meta">
+              <span class="pod-eps">88 episodes</span>
+              <span class="pod-freq">Bi-weekly</span>
+            </div>
+            <button class="pod-sub-btn" onclick="toggleSub(this)">+ Subscribe</button>
+          </div>
+        </div>
+
+        <div class="pod-card" data-cat="culture">
+          <div class="pod-art">
+            <div class="pod-art-bg pa3"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">🎤</div>
+            <div class="pod-cat-badge">Culture</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">Behind the Mix</div>
+            <div class="pod-host">with Priya Nair</div>
+            <div class="pod-meta">
+              <span class="pod-eps">56 episodes</span>
+              <span class="pod-freq">Weekly</span>
+            </div>
+            <button class="pod-sub-btn" onclick="toggleSub(this)">+ Subscribe</button>
+          </div>
+        </div>
+
+        <div class="pod-card" data-cat="music">
+          <div class="pod-art">
+            <div class="pod-art-bg pa4"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">🎹</div>
+            <div class="pod-new-badge">New Ep</div>
+            <div class="pod-cat-badge">Music</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">Keys &amp; Chords</div>
+            <div class="pod-host">with Leo Fontaine</div>
+            <div class="pod-meta">
+              <span class="pod-eps">34 episodes</span>
+              <span class="pod-freq">Monthly</span>
+            </div>
+            <button class="pod-sub-btn subbed" onclick="toggleSub(this)">✓ Subscribed</button>
+          </div>
+        </div>
+
+        <div class="pod-card" data-cat="business">
+          <div class="pod-art">
+            <div class="pod-art-bg pa5"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">📈</div>
+            <div class="pod-cat-badge">Business</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">The Vinyl Economy</div>
+            <div class="pod-host">with Sam Rivera</div>
+            <div class="pod-meta">
+              <span class="pod-eps">71 episodes</span>
+              <span class="pod-freq">Weekly</span>
+            </div>
+            <button class="pod-sub-btn" onclick="toggleSub(this)">+ Subscribe</button>
+          </div>
+        </div>
+
+        <div class="pod-card" data-cat="culture">
+          <div class="pod-art">
+            <div class="pod-art-bg pa6"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">🔥</div>
+            <div class="pod-new-badge">New Ep</div>
+            <div class="pod-cat-badge">Culture</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">Frequency Report</div>
+            <div class="pod-host">with Aisha Thomas</div>
+            <div class="pod-meta">
+              <span class="pod-eps">103 episodes</span>
+              <span class="pod-freq">Bi-weekly</span>
+            </div>
+            <button class="pod-sub-btn" onclick="toggleSub(this)">+ Subscribe</button>
+          </div>
+        </div>
+
+        <div class="pod-card" data-cat="tech">
+          <div class="pod-art">
+            <div class="pod-art-bg pa7"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">💻</div>
+            <div class="pod-cat-badge">Tech</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">Digital Groove</div>
+            <div class="pod-host">with Kai Patel</div>
+            <div class="pod-meta">
+              <span class="pod-eps">49 episodes</span>
+              <span class="pod-freq">Weekly</span>
+            </div>
+            <button class="pod-sub-btn" onclick="toggleSub(this)">+ Subscribe</button>
+          </div>
+        </div>
+
+        <div class="pod-card" data-cat="wellness">
+          <div class="pod-art">
+            <div class="pod-art-bg pa8"></div>
+            <div class="pod-art-pattern"></div>
+            <div class="pod-art-icon">🧘</div>
+            <div class="pod-new-badge">New Ep</div>
+            <div class="pod-cat-badge">Wellness</div>
+            <div class="pod-art-overlay">
+              <button class="pod-play-btn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 3.5L14 9L5 14.5V3.5Z" fill="#080810"/></svg></button>
+            </div>
+          </div>
+          <div class="pod-body">
+            <div class="pod-name">Sonic Therapy</div>
+            <div class="pod-host">with Ren Yoshida</div>
+            <div class="pod-meta">
+              <span class="pod-eps">28 episodes</span>
+              <span class="pod-freq">Weekly</span>
+            </div>
+            <button class="pod-sub-btn" onclick="toggleSub(this)">+ Subscribe</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ LATEST EPISODES ══════════════════════ -->
+    <section class="episodes-section reveal">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">🔔 Fresh Drops</div>
+          <div class="sec-title">Latest Episodes</div>
+        </div>
+        <a href="#" class="see-all">All episodes →</a>
+      </div>
+      <div class="ep-list" id="epList">
+
+        <div class="ep-row playing-ep" onclick="setPlayingEp(this)">
+          <div class="ep-art">
+            <div class="ep-art-bg epa1"></div>
+            <div class="ep-play-bars">
+              <div class="epb" style="--h:16px;--d:.5s"></div>
+              <div class="epb" style="--h:22px;--d:.65s;animation-delay:.1s"></div>
+              <div class="epb" style="--h:12px;--d:.45s;animation-delay:.2s"></div>
+              <div class="epb" style="--h:20px;--d:.6s;animation-delay:.05s"></div>
+            </div>
+          </div>
+          <div class="ep-info">
+            <div class="ep-show">Sound Theory</div>
+            <div class="ep-title">Ep.142 — The Algorithm Problem</div>
+            <div class="ep-desc">Why streaming recommendation engines may be making music culture worse — and what artists and listeners can do about it.</div>
+          </div>
+          <div class="ep-date">Today</div>
+          <div class="ep-dur">62 min</div>
+          <div class="ep-actions">
+            <div class="ep-new-dot"></div>
+            <button class="ep-btn saved" title="Saved">🔖</button>
+            <button class="ep-play-circle">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="3" y="2" width="2.5" height="10" rx="1.2" fill="#080810"/><rect x="8.5" y="2" width="2.5" height="10" rx="1.2" fill="#080810"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="ep-row" onclick="setPlayingEp(this)">
+          <div class="ep-art"><div class="ep-art-bg epa2"></div></div>
+          <div class="ep-info">
+            <div class="ep-show">Bassline Stories</div>
+            <div class="ep-title">Ep.88 — Underground Club Nights Are Back</div>
+            <div class="ep-desc">A conversation with three promoters on how independent venues are reclaiming the night from corporate giants.</div>
+          </div>
+          <div class="ep-date">Yesterday</div>
+          <div class="ep-dur">48 min</div>
+          <div class="ep-actions">
+            <div class="ep-new-dot"></div>
+            <button class="ep-btn" onclick="toggleSave(this,event)" title="Save">🔖</button>
+            <button class="ep-play-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="#080810"/></svg></button>
+          </div>
+        </div>
+
+        <div class="ep-row" onclick="setPlayingEp(this)">
+          <div class="ep-art"><div class="ep-art-bg epa3"></div></div>
+          <div class="ep-info">
+            <div class="ep-show">Behind the Mix</div>
+            <div class="ep-title">Ep.56 — Gender &amp; the Mixing Desk</div>
+            <div class="ep-desc">Exploring why only 2% of audio engineers are women, and the artists fighting to change that statistic.</div>
+          </div>
+          <div class="ep-date">2 days ago</div>
+          <div class="ep-dur">55 min</div>
+          <div class="ep-actions">
+            <button class="ep-btn" onclick="toggleSave(this,event)" title="Save">🔖</button>
+            <button class="ep-play-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="#080810"/></svg></button>
+          </div>
+        </div>
+
+        <div class="ep-row" onclick="setPlayingEp(this)">
+          <div class="ep-art"><div class="ep-art-bg epa4"></div></div>
+          <div class="ep-info">
+            <div class="ep-show">Keys &amp; Chords</div>
+            <div class="ep-title">Ep.34 — Learning Piano at 40</div>
+            <div class="ep-desc">Neuroscience says it's never too late. Leo and a neurologist explore adult neuroplasticity and musical skill acquisition.</div>
+          </div>
+          <div class="ep-date">3 days ago</div>
+          <div class="ep-dur">41 min</div>
+          <div class="ep-actions">
+            <button class="ep-btn" onclick="toggleSave(this,event)" title="Save">🔖</button>
+            <button class="ep-play-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="#080810"/></svg></button>
+          </div>
+        </div>
+
+        <div class="ep-row" onclick="setPlayingEp(this)">
+          <div class="ep-art"><div class="ep-art-bg epa5"></div></div>
+          <div class="ep-info">
+            <div class="ep-show">The Vinyl Economy</div>
+            <div class="ep-title">Ep.71 — Why Vinyl Sales Hit a 35-Year High</div>
+            <div class="ep-desc">Record stores are thriving, pressing plants are overwhelmed — and Gen Z is buying more vinyl than any other demographic.</div>
+          </div>
+          <div class="ep-date">4 days ago</div>
+          <div class="ep-dur">38 min</div>
+          <div class="ep-actions">
+            <button class="ep-btn saved" onclick="toggleSave(this,event)" title="Saved">🔖</button>
+            <button class="ep-play-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="#080810"/></svg></button>
+          </div>
+        </div>
+
+        <div class="ep-row" onclick="setPlayingEp(this)">
+          <div class="ep-art"><div class="ep-art-bg epa6"></div></div>
+          <div class="ep-info">
+            <div class="ep-show">Frequency Report</div>
+            <div class="ep-title">Ep.103 — AI and the Sound of Tomorrow</div>
+            <div class="ep-desc">Is AI-generated music a threat to human creativity or the next instrument? A nuanced debate with three producers.</div>
+          </div>
+          <div class="ep-date">5 days ago</div>
+          <div class="ep-dur">67 min</div>
+          <div class="ep-actions">
+            <button class="ep-btn" onclick="toggleSave(this,event)" title="Save">🔖</button>
+            <button class="ep-play-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="#080810"/></svg></button>
+          </div>
+        </div>
+
+        <div class="ep-row" onclick="setPlayingEp(this)">
+          <div class="ep-art"><div class="ep-art-bg epa7"></div></div>
+          <div class="ep-info">
+            <div class="ep-show">Digital Groove</div>
+            <div class="ep-title">Ep.49 — How Lo-fi Beat the Algorithms</div>
+            <div class="ep-desc">Lo-fi study music became a $2B industry by accident. Kai investigates the unlikely rise of the most-streamed genre on the planet.</div>
+          </div>
+          <div class="ep-date">1 week ago</div>
+          <div class="ep-dur">52 min</div>
+          <div class="ep-actions">
+            <button class="ep-btn" onclick="toggleSave(this,event)" title="Save">🔖</button>
+            <button class="ep-play-circle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2L11 7L3 12V2Z" fill="#080810"/></svg></button>
+          </div>
+        </div>
+
+      </div>
+      <button class="load-more-btn" id="loadMoreEps">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7l5 5 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Load more episodes
+      </button>
+    </section>
+
+    <!-- ═══ TOP CHARTS ═══════════════════════════ -->
+    <section class="charts-section reveal">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">📊 Rankings</div>
+          <div class="sec-title">Podcast Charts</div>
+        </div>
+        <a href="#" class="see-all">Full charts →</a>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-panel">
+          <div class="chart-header">
+            <div><div class="chart-title">Most Listened</div><div class="chart-sub">Last 7 days</div></div>
+            <div class="chart-badge cb-teal">🎙️ Top</div>
+          </div>
+          <div class="chart-list">
+            <div class="chart-row"><div class="cr-num">01</div><div class="cr-art"><div class="cr-art-bg cra1"></div></div><div><div class="cr-info-name">Sound Theory</div><div class="cr-info-host">Maya Chen</div></div><div class="cr-listeners">2.8M listeners</div></div>
+            <div class="chart-row"><div class="cr-num">02</div><div class="cr-art"><div class="cr-art-bg cra2"></div></div><div><div class="cr-info-name">Bassline Stories</div><div class="cr-info-host">DJ Nocturne</div></div><div class="cr-listeners">1.9M listeners</div></div>
+            <div class="chart-row"><div class="cr-num">03</div><div class="cr-art"><div class="cr-art-bg cra3"></div></div><div><div class="cr-info-name">Behind the Mix</div><div class="cr-info-host">Priya Nair</div></div><div class="cr-listeners">1.4M listeners</div></div>
+            <div class="chart-row"><div class="cr-num">04</div><div class="cr-art"><div class="cr-art-bg cra4"></div></div><div><div class="cr-info-name">Keys &amp; Chords</div><div class="cr-info-host">Leo Fontaine</div></div><div class="cr-listeners">980K listeners</div></div>
+            <div class="chart-row"><div class="cr-num">05</div><div class="cr-art"><div class="cr-art-bg cra5"></div></div><div><div class="cr-info-name">The Vinyl Economy</div><div class="cr-info-host">Sam Rivera</div></div><div class="cr-listeners">740K listeners</div></div>
+          </div>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-header">
+            <div><div class="chart-title">Rising Fast</div><div class="chart-sub">Biggest growth this week</div></div>
+            <div class="chart-badge cb-purple">↑ Rising</div>
+          </div>
+          <div class="chart-list">
+            <div class="chart-row"><div class="cr-num">01</div><div class="cr-art"><div class="cr-art-bg cra6"></div></div><div><div class="cr-info-name">Frequency Report</div><div class="cr-info-host">Aisha Thomas</div></div><div class="cr-listeners">↑ 340%</div></div>
+            <div class="chart-row"><div class="cr-num">02</div><div class="cr-art"><div class="cr-art-bg cra7"></div></div><div><div class="cr-info-name">Digital Groove</div><div class="cr-info-host">Kai Patel</div></div><div class="cr-listeners">↑ 220%</div></div>
+            <div class="chart-row"><div class="cr-num">03</div><div class="cr-art"><div class="cr-art-bg cra8"></div></div><div><div class="cr-info-name">Sonic Therapy</div><div class="cr-info-host">Ren Yoshida</div></div><div class="cr-listeners">↑ 185%</div></div>
+            <div class="chart-row"><div class="cr-num">04</div><div class="cr-art"><div class="cr-art-bg cra9"></div></div><div><div class="cr-info-name">Loop &amp; Record</div><div class="cr-info-host">Marco Diaz</div></div><div class="cr-listeners">↑ 142%</div></div>
+            <div class="chart-row"><div class="cr-num">05</div><div class="cr-art"><div class="cr-art-bg cra10"></div></div><div><div class="cr-info-name">Overtone Club</div><div class="cr-info-host">Yuki Sato</div></div><div class="cr-listeners">↑ 118%</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ DISCOVER TOPICS ══════════════════════ -->
+    <section class="topics-section reveal">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">🗂️ Explore</div>
+          <div class="sec-title">Browse Topics</div>
+        </div>
+      </div>
+      <div class="topics-grid stagger" id="topicsGrid">
+        <div class="topic-card"><div class="topic-bg tb1"></div><div class="topic-overlay"></div><div class="topic-pattern"></div><div class="topic-icon">🎵</div><div class="topic-label">Music<div class="topic-count">1,240 podcasts</div></div></div>
+        <div class="topic-card"><div class="topic-bg tb2"></div><div class="topic-overlay"></div><div class="topic-pattern"></div><div class="topic-icon">💻</div><div class="topic-label">Technology<div class="topic-count">892 podcasts</div></div></div>
+        <div class="topic-card"><div class="topic-bg tb3"></div><div class="topic-overlay"></div><div class="topic-pattern"></div><div class="topic-icon">🌍</div><div class="topic-label">Culture<div class="topic-count">2,104 podcasts</div></div></div>
+        <div class="topic-card"><div class="topic-bg tb4"></div><div class="topic-overlay"></div><div class="topic-pattern"></div><div class="topic-icon">📈</div><div class="topic-label">Business<div class="topic-count">1,580 podcasts</div></div></div>
+        <div class="topic-card"><div class="topic-bg tb5"></div><div class="topic-overlay"></div><div class="topic-pattern"></div><div class="topic-icon">🧘</div><div class="topic-label">Wellness<div class="topic-count">740 podcasts</div></div></div>
+        <div class="topic-card"><div class="topic-bg tb6"></div><div class="topic-overlay"></div><div class="topic-pattern"></div><div class="topic-icon">🔬</div><div class="topic-label">Science<div class="topic-count">634 podcasts</div></div></div>
+      </div>
+    </section>
+
+    <!-- ═══ NEWSLETTER BANNER ════════════════════ -->
+    <section class="newsletter-banner reveal">
+      <div class="nb-inner">
+        <div class="nb-wave" id="nbWave"></div>
+        <div>
+          <div class="nb-label">✦ Never Miss an Episode</div>
+          <div class="nb-title">Get Notified<br>Instantly.</div>
+          <p class="nb-sub">Subscribe to your favourite shows and get push notifications the moment a new episode drops — no FOMO, ever.</p>
+        </div>
+        <div class="nb-action">
+          <button class="btn-nb-primary">Enable Notifications</button>
+          <button class="btn-nb-sec">Browse All Podcasts</button>
+        </div>
+      </div>
+    </section>
+
   </main>
 
-  <script src="js/script.js" defer></script>
+  <footer>
+    <a href="index.html" class="footer-logo">Melod<span>ify</span></a>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Support</a>
+      <a href="#">Blog</a>
+    </div>
+    <div class="footer-copy">© 2026 Melodify, Inc. All rights reserved.</div>
+  </footer>
+
+  <script>
+    /* ── Cursor ───────────────────────────────── */
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('cursorRing');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+    (function tick(){
+      rx+=(mx-rx)*0.13; ry+=(my-ry)*0.13;
+      cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+      ring.style.left=rx+'px'; ring.style.top=ry+'px';
+      requestAnimationFrame(tick);
+    })();
+
+    /* ── Hero wave background bars ────────────── */
+    const heroBg = document.getElementById('heroBg');
+    for(let i=0;i<120;i++){
+      const b=document.createElement('div'); b.className='hwb-bar';
+      const h=Math.random()*130+20;
+      b.style.cssText=`--h:${h}px;--d:${(.5+Math.random()*.8).toFixed(2)}s;--dl:${(Math.random()*2).toFixed(2)}s`;
+      heroBg.appendChild(b);
+    }
+
+    /* ── FPC waveform ─────────────────────────── */
+    const fpcWave = document.getElementById('fpcWave');
+    for(let i=0;i<32;i++){
+      const b=document.createElement('div'); b.className='fpc-wv-bar';
+      const h=Math.random()*28+4;
+      b.style.cssText=`--h:${h}px;--d:${(.35+Math.random()*.5).toFixed(2)}s;--dl:${(i*.06).toFixed(2)}s`;
+      fpcWave.appendChild(b);
+    }
+
+    /* ── Newsletter wave ──────────────────────── */
+    const nbWave=document.getElementById('nbWave');
+    [30,55,70,42,80,58,38,72,48,65,35,60].forEach((h,i)=>{
+      const b=document.createElement('div'); b.className='nb-wbar';
+      b.style.cssText=`--h:${h}px;--d:${(.4+Math.random()*.5).toFixed(2)}s;--dl:${(i*.08).toFixed(2)}s`;
+      nbWave.appendChild(b);
+    });
+
+    /* ── Mini player toggle ───────────────────── */
+    let isPlaying = true;
+    function toggleMpPlay(){
+      isPlaying=!isPlaying;
+      document.getElementById('mpPlayIcon').innerHTML = isPlaying
+        ? '<rect x="4" y="3" width="3" height="10" rx="1.5" fill="#080810"/><rect x="9" y="3" width="3" height="10" rx="1.5" fill="#080810"/>'
+        : '<path d="M5 3L13 8L5 13V3Z" fill="#080810"/>';
+    }
+    function playFeatured(){ isPlaying=true; document.getElementById('mpPlayIcon').innerHTML='<rect x="4" y="3" width="3" height="10" rx="1.5" fill="#080810"/><rect x="9" y="3" width="3" height="10" rx="1.5" fill="#080810"/>'; }
+
+    /* ── Speed cycle ──────────────────────────── */
+    const speeds=['1×','1.25×','1.5×','2×'];
+    function cycleSpeed(btn){ const i=speeds.indexOf(btn.textContent); btn.textContent=speeds[(i+1)%speeds.length]; }
+
+    /* ── Hero subscribe ───────────────────────── */
+    let heroSubbed=false;
+    function toggleHeroSub(){
+      heroSubbed=!heroSubbed;
+      const btn=document.getElementById('heroSubBtn');
+      const icon=document.getElementById('heroSubIcon');
+      if(heroSubbed){ btn.classList.add('subscribed'); btn.innerHTML='<span>✓</span> Subscribed'; }
+      else { btn.classList.remove('subscribed'); btn.innerHTML='<span id="heroSubIcon">+</span> Subscribe'; }
+    }
+
+    /* ── Podcast card subscribe toggle ───────── */
+    function toggleSub(btn){
+      const subbed=btn.classList.toggle('subbed');
+      btn.textContent=subbed?'✓ Subscribed':'+ Subscribe';
+    }
+
+    /* ── Episode save ─────────────────────────── */
+    function toggleSave(btn,e){
+      e.stopPropagation();
+      btn.classList.toggle('saved');
+    }
+
+    /* ── Playing episode ──────────────────────── */
+    function setPlayingEp(row){
+      document.querySelectorAll('.ep-row.playing-ep').forEach(r=>r.classList.remove('playing-ep'));
+      row.classList.add('playing-ep');
+    }
+
+    /* ── Category filter chips ────────────────── */
+    document.getElementById('catStrip').addEventListener('click', e=>{
+      const chip=e.target.closest('.cat-chip'); if(!chip) return;
+      document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      const cat=chip.dataset.c;
+      document.querySelectorAll('.pod-card').forEach(card=>{
+        card.style.display=(cat==='all'||card.dataset.cat===cat)?'':'none';
+      });
+    });
+
+    /* ── Scroll reveal ────────────────────────── */
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); } });
+    },{threshold:0.08});
+    document.querySelectorAll('.reveal,.stagger').forEach(el=>io.observe(el));
+
+    /* ── Load more episodes ───────────────────── */
+    document.getElementById('loadMoreEps').addEventListener('click',function(){
+      this.textContent='All episodes loaded ✓';
+      this.style.color='var(--accent3)';
+      this.style.borderColor='rgba(0,229,195,.3)';
+    });
+  </script>
+  <script src="js/auth.js"></script>
+<script src="js/player.js"></script>
 </body>
 </html>

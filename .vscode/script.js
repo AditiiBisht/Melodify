@@ -156,21 +156,23 @@ document.querySelectorAll('.chip').forEach(chip => {
 const songs = [
 
 {
- title: "Neon Dreams",
- artist: "Luna Wave",
+ title: "Travlin' Soldier",
+ artist: "Cody jhonson",
  album: "After Midnight",
  duration: "4:05",
  liked: true,
- color: "ta1"
+ color: "ta1",
+ src: "assets/audio/Frontend/assets/songs/Cody-Johnson-Travelin'-Soldier-(Acoustic).mp3"
 },
 
 {
- title: "Violet Frequency",
- artist: "Parallax Echo",
+ title: "Time marches on",
+ artist: "Tracy Lawrence",
  album: "Echoes",
  duration: "3:42",
  liked: true,
- color: "ta2"
+ color: "ta2",
+ src: "assets/audio/song1Frontend/assets/songs/Tracy-Lawrence-Time-Marches-On-(acoustic).mp3"
 },
 
 {
