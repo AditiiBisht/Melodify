@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Melodify — Sign Up</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+  <style>
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #080810;
+      --surface: #0d0d1a;
+      --card: #11111e;
+      --border: rgba(255,255,255,0.07);
+      --accent: #ff3d6e;
+      --accent2: #7b5ea7;
+      --text: #f0eeff;
+      --muted: #6a6a95;
+      --success: #00e5c3;
+      --error: #ff3d6e;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    .left {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top left, rgba(123,94,167,.35), transparent 40%),
+        radial-gradient(circle at bottom right, rgba(255,61,110,.25), transparent 40%),
+        #080810;
+    }
+
+    .branding {
+      text-align: center;
+      z-index: 2;
+    }
+
+    .branding h1 {
+      font-family: var(--font-head);
+      font-size: 4rem;
+      letter-spacing: -0.05em;
+      margin-bottom: 18px;
+    }
+
+    .branding h1 span {
+      color: var(--accent);
+    }
+
+    .branding p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 420px;
+      line-height: 1.7;
+    }
+
+    .disc {
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      margin: 0 auto 40px;
+      background:
+        radial-gradient(circle, #1c1c30 15%, #0d0d1a 16%, #0d0d1a 35%, #141428 36%, #0d0d1a 60%);
+      animation: spin 8s linear infinite;
+      box-shadow:
+        0 0 40px rgba(255,61,110,.2),
+        inset 0 0 40px rgba(0,0,0,.6);
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 50px;
+    }
+
+    .signup-box {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .signup-box h2 {
+      font-family: var(--font-head);
+      font-size: 2.6rem;
+      margin-bottom: 12px;
+      letter-spacing: -0.04em;
+    }
+
+    .signup-box p {
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .signup-box p a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .85rem;
+      color: rgba(255,255,255,.8);
+    }
+
+    .field input {
+      width: 100%;
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: .2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(255,61,110,.12);
+    }
+
+    .signup-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 14px;
+      background: var(--accent);
+      color: white;
+      font-size: 1rem;
+      font-family: var(--font-head);
+      font-weight: 700;
+      cursor: pointer;
+      transition: .25s;
+      box-shadow: 0 0 30px rgba(255,61,110,.3);
+    }
+
+    .signup-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(255,61,110,.45);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 14px 20px;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .3s;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    @media(max-width: 900px) {
+
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      .left {
+        display: none;
+      }
+
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="left">
+
+    <div class="branding">
+
+      <div class="disc"></div>
+
+      <h1>Melod<span>ify</span></h1>
+
+      <p>
+        Build your music universe. Save playlists, like songs,
+        follow artists, and stream your vibe anywhere.
+      </p>
+
+    </div>
+
+  </div>
+
+  <div class="right">
+
+    <div class="signup-box">
+
+      <h2>Create Account</h2>
+
+      <p>
+        Already have an account?
+        <a href="login.html">Log in →</a>
+      </p>
+
+      <form id="signupForm">
+
+        <div class="field">
+          <label>Username</label>
+          <input
+            type="text"
+            id="username"
+            placeholder="Enter username"
+          />
+        </div>
+
+        <div class="field">
+          <label>Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Create password"
+          />
+        </div>
+
+        <button type="submit" class="signup-btn">
+          Create Account
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script src="./js/signup.js"></script>
+
+</body>
+</html>
