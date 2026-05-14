@@ -1,63 +1,120 @@
-<script src="../js/login.js"></script>
-const loginForm = document.getElementById("loginForm");
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-loginForm.addEventListener("submit", async (e) => {
-
-  e.preventDefault();
-
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  try {
-
-    const response = await fetch(
-      "http://localhost:5000/api/auth/login",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    console.log(data);
-
-    if (data.success) {
-
-      // Save token
-      localStorage.setItem("token", data.token);
-
-      // Save user
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
+    const loginForm =
+      document.getElementById(
+        "loginForm"
       );
 
-      alert("Login Successful 😌");
+    const loginEmail =
+      document.getElementById(
+        "loginEmail"
+      );
 
-      // Redirect
-      window.location.href = "home.html";
+    const loginPassword =
+      document.getElementById(
+        "loginPassword"
+      );
 
-    } else {
+    const toast =
+      document.getElementById(
+        "toast"
+      );
 
-      alert(data.message);
+    const toastMsg =
+      document.getElementById(
+        "toastMsg"
+      );
+
+    function showToast(message) {
+
+      if (!toast || !toastMsg) {
+        alert(message);
+        return;
+      }
+
+      toastMsg.textContent =
+        message;
+
+      toast.classList.add(
+        "show"
+      );
+
+      setTimeout(() => {
+
+        toast.classList.remove(
+          "show"
+        );
+
+      }, 3000);
 
     }
 
-  } catch (error) {
+    loginForm.addEventListener(
+      "submit",
+      async (e) => {
 
-    console.log(error);
+        e.preventDefault();
 
-    alert("Something went wrong");
+        if (
+          !loginEmail.value ||
+          !loginPassword.value
+        ) {
+
+          showToast(
+            "Please fill all fields"
+          );
+
+          return;
+
+        }
+
+        const { ok, data } =
+          await apiFetch(
+            "/auth/login",
+            {
+              method: "POST",
+
+              body: JSON.stringify({
+                email:
+                  loginEmail.value,
+
+                password:
+                  loginPassword.value,
+              }),
+            }
+          );
+
+        if (ok) {
+
+          Auth.save(
+            data.token,
+            data.user
+          );
+
+          showToast(
+            "Login Successful 😌"
+          );
+
+          setTimeout(() => {
+
+            window.location.href =
+              "discover.html";
+
+          }, 1200);
+
+        } else {
+
+          showToast(
+            data.message ||
+            "Login Failed"
+          );
+
+        }
+
+      }
+    );
 
   }
-
-});
+);

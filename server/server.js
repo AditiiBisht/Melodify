@@ -8,6 +8,7 @@ const path = require("path");
 // Routes
 const authRoutes = require("./routes/authRoutes");
 const songRoutes = require("./routes/songs");
+app.use("/api/songs", songRoutes);
 const playlistRoutes = require("./routes/playlists");
 const userRoutes = require("./routes/user");
 

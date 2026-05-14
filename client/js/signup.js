@@ -1,92 +1,69 @@
-const signupForm = document.getElementById("signupForm");
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-const username = document.getElementById("username");
-const email = document.getElementById("email");
-const password = document.getElementById("password");
+    const signupForm =
+      document.getElementById("signupForm");
 
-const toast = document.getElementById("toast");
+    const username =
+      document.getElementById("username");
 
-function showToast(message) {
+    const email =
+      document.getElementById("email");
 
-  toast.textContent = message;
+    const password =
+      document.getElementById("password");
 
-  toast.classList.add("show");
+    signupForm.addEventListener(
+      "submit",
+      async (e) => {
 
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
+        e.preventDefault();
 
-}
+        const { ok, data } =
+          await apiFetch(
+            "/auth/register",
+            {
+              method: "POST",
 
-signupForm.addEventListener("submit", async (e) => {
+              body: JSON.stringify({
+                username:
+                  username.value,
 
-  e.preventDefault();
+                email:
+                  email.value,
 
-  if (
-    !username.value ||
-    !email.value ||
-    !password.value
-  ) {
+                password:
+                  password.value,
+              }),
+            }
+          );
 
-    showToast("All fields are required");
+        if (ok) {
 
-    return;
+          Auth.save(
+            data.token,
+            data.user
+          );
 
-  }
+          alert(
+            "Signup Successful 😌"
+          );
 
-  try {
+          window.location.href =
+            "login.html";
 
-    const response = await fetch(
-      "http://localhost:5000/api/auth/register",
-      {
-        method: "POST",
+        } else {
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          alert(
+            data.message ||
+            "Signup Failed"
+          );
 
-        body: JSON.stringify({
-          username: username.value,
-          email: email.value,
-          password: password.value,
-        }),
+        }
+
       }
     );
 
-    const data = await response.json();
-
-    console.log(data);
-
-    if (data.success) {
-
-      localStorage.setItem(
-        "token",
-        data.token
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-
-      showToast("Signup successful 😌");
-
-      setTimeout(() => {
-        window.location.href = "login.html";
-      }, 2000);
-
-    } else {
-
-      showToast(data.message);
-
-    }
-
-  } catch (error) {
-
-    console.log(error);
-
-    showToast("Server Error");
-
   }
-
-});
+);
