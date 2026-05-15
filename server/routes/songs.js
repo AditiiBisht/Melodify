@@ -1,53 +1,25 @@
 const express = require("express");
 const router = express.Router();
 
-const Song = require("../models/Song");
-const upload = require("../middlewares/upload");
+const upload = require("../middleware/upload");
 
+const {
+  uploadSong,
+  getSongs,
+} = require("../controllers/songController");
+
+// ─────────────────────────────────────────────
+// Upload Song Route
+// ─────────────────────────────────────────────
 router.post(
   "/upload",
-  upload.fields([
-    { name: "song", maxCount: 1 },
-    { name: "image", maxCount: 1 },
-  ]),
-  async (req, res) => {
-    try {
-      const { title, artist } = req.body;
-
-      const songFile = req.files["song"][0];
-      const imageFile = req.files["image"][0];
-
-      const newSong = new Song({
-        title,
-        artist,
-        audioUrl: songFile.path,
-        imageUrl: imageFile.path,
-      });
-
-      await newSong.save();
-
-      res.status(201).json({
-        message: "Song uploaded successfully",
-        song: newSong,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        error: "Upload failed",
-      });
-    }
-  }
+  upload.any(),
+  uploadSong
 );
 
-router.get("/", async (req, res) => {
-  try {
-    const songs = await Song.find();
-    res.json(songs);
-  } catch (error) {
-    res.status(500).json({
-      error: "Failed to fetch songs",
-    });
-  }
-});
+// ─────────────────────────────────────────────
+// Get All Songs Route
+// ─────────────────────────────────────────────
+router.get("/", getSongs);
 
 module.exports = router;

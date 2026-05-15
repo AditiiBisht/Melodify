@@ -1,141 +1,180 @@
-// js/auth.js — handles login.html register + login forms
-// ──────────────────────────────────────────────────────
+// ============================================================
+// client/js/auth.js
+// COPY THIS FILE to: client/js/auth.js
+// Matches your exact login.html IDs:
+//   loginForm, loginEmail, loginPassword, loginBtn
+//   toast, toastMsg, toastIcon, emailMsg, pwMsg
+// ============================================================
 
-document.addEventListener("DOMContentLoaded", () => {
-  // If already logged in, skip straight to discover
+document.addEventListener("DOMContentLoaded", function () {
+
+  // Already logged in → go straight to discover
   if (Auth.isLoggedIn()) {
     window.location.href = "discover.html";
     return;
   }
 
-  // ── Tab switching ─────────────────────────────────
-  const tabLogin    = document.getElementById("tab-login");
-  const tabRegister = document.getElementById("tab-register");
-  const formLogin   = document.getElementById("form-login");
-  const formRegister= document.getElementById("form-register");
+  // ── DOM elements (matching your exact login.html IDs) ────
+  var loginForm     = document.getElementById("loginForm");
+  var loginEmail    = document.getElementById("loginEmail");
+  var loginPassword = document.getElementById("loginPassword");
+  var loginBtn      = document.getElementById("loginBtn");
+  var emailMsg      = document.getElementById("emailMsg");
+  var pwMsg         = document.getElementById("pwMsg");
+  var toast         = document.getElementById("toast");
+  var toastMsg      = document.getElementById("toastMsg");
+  var toastIcon     = document.getElementById("toastIcon");
 
-  function showLogin() {
-    tabLogin.classList.add("active");
-    tabRegister.classList.remove("active");
-    formLogin.style.display    = "flex";
-    formRegister.style.display = "none";
-  }
-  function showRegister() {
-    tabRegister.classList.add("active");
-    tabLogin.classList.remove("active");
-    formRegister.style.display = "flex";
-    formLogin.style.display    = "none";
-  }
+  // ── Show toast using existing HTML element ───────────────
+  function showLoginToast(msg, isError) {
+    if (!toast) return;
+    if (toastMsg)  toastMsg.textContent  = msg;
+    if (toastIcon) toastIcon.textContent = isError ? "✕" : "✓";
 
-  tabLogin?.addEventListener("click", showLogin);
-  tabRegister?.addEventListener("click", showRegister);
+    // Reset styles, then show
+    toast.style.display    = "flex";
+    toast.style.opacity    = "1";
+    toast.style.background = isError
+      ? "rgba(255,61,110,0.15)"
+      : "rgba(0,229,195,0.15)";
+    toast.style.border     = isError
+      ? "1px solid rgba(255,61,110,0.4)"
+      : "1px solid rgba(0,229,195,0.4)";
+    toast.style.color      = isError ? "#ff3d6e" : "#00e5c3";
 
-  // ── Helpers ───────────────────────────────────────
-  function setError(fieldId, msg) {
-    const el = document.getElementById(fieldId);
-    if (el) el.textContent = msg;
-  }
-  function clearErrors(...ids) {
-    ids.forEach((id) => setError(id, ""));
-  }
-  function setLoading(btn, loading) {
-    btn.disabled = loading;
-    btn.textContent = loading ? "Please wait…" : btn.dataset.label;
-  }
-  function showBanner(id, msg, isError = true) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = msg;
-    el.className   = `form-banner ${isError ? "error" : "success"}`;
-    el.style.display = "block";
-  }
-  function hideBanner(id) {
-    const el = document.getElementById(id);
-    if (el) el.style.display = "none";
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toast.style.display = "none"; }, 3500);
   }
 
-  // ── LOGIN ─────────────────────────────────────────
-  const btnLogin = document.getElementById("btn-login");
-  if (btnLogin) btnLogin.dataset.label = btnLogin.textContent;
+  // ── Field error helpers ──────────────────────────────────
+  function setErr(el, msgEl, msg) {
+    if (el)    el.style.borderColor = "rgba(255,61,110,0.6)";
+    if (msgEl) { msgEl.textContent = msg; msgEl.style.color = "#ff3d6e"; }
+  }
+  function clearErr(el, msgEl) {
+    if (el)    el.style.borderColor = "";
+    if (msgEl) msgEl.textContent = "";
+  }
 
-  formLogin?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    clearErrors("err-login-email", "err-login-password");
-    hideBanner("banner-login");
+  // ── Button loading state ─────────────────────────────────
+  function setBtnLoading(loading) {
+    if (!loginBtn) return;
+    loginBtn.disabled = loading;
+    loginBtn.textContent = loading ? "Signing in…" : "Sign In";
+  }
 
-    const email    = document.getElementById("login-email").value.trim();
-    const password = document.getElementById("login-password").value;
+  // ── LOGIN form submit ────────────────────────────────────
+  if (loginForm) {
+    loginForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      clearErr(loginEmail, emailMsg);
+      clearErr(loginPassword, pwMsg);
 
-    let valid = true;
-    if (!email)    { setError("err-login-email", "Email is required.");    valid = false; }
-    if (!password) { setError("err-login-password", "Password is required."); valid = false; }
-    if (!valid) return;
+      var email    = loginEmail  ? loginEmail.value.trim()  : "";
+      var password = loginPassword ? loginPassword.value    : "";
 
-    setLoading(btnLogin, true);
+      // Validate
+      var valid = true;
+      if (!email) {
+        setErr(loginEmail, emailMsg, "Email is required.");
+        valid = false;
+      }
+      if (!password) {
+        setErr(loginPassword, pwMsg, "Password is required.");
+        valid = false;
+      }
+      if (!valid) return;
 
-    const { ok, data } = await apiFetch("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
+      setBtnLoading(true);
+
+      var res = await apiFetch("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: email, password: password }),
+      });
+
+      setBtnLoading(false);
+
+      if (res.ok) {
+        Auth.save(res.data.token, res.data.user);
+        showLoginToast("Welcome back, " + res.data.user.username + "! 🎵", false);
+        setTimeout(function () {
+          window.location.href = "discover.html";
+        }, 900);
+      } else {
+        var msg = res.data.message || "Invalid email or password.";
+        showLoginToast(msg, true);
+
+        // Highlight specific field
+        if (msg.toLowerCase().includes("email")) {
+          setErr(loginEmail, emailMsg, msg);
+        } else if (msg.toLowerCase().includes("password")) {
+          setErr(loginPassword, pwMsg, msg);
+        } else {
+          setErr(loginPassword, pwMsg, "Invalid credentials.");
+        }
+      }
     });
+  }
 
-    setLoading(btnLogin, false);
-
-    if (ok) {
-      Auth.save(data.token, data.user);
-      showBanner("banner-login", "✅ Welcome back, " + data.user.username + "!", false);
-      setTimeout(() => (window.location.href = "discover.html"), 800);
-    } else {
-      showBanner("banner-login", data.message || "Login failed.", true);
-    }
-  });
-
-  // ── REGISTER ──────────────────────────────────────
-  const btnRegister = document.getElementById("btn-register");
-  if (btnRegister) btnRegister.dataset.label = btnRegister.textContent;
-
-  formRegister?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    clearErrors("err-reg-username", "err-reg-email", "err-reg-password", "err-reg-confirm");
-    hideBanner("banner-register");
-
-    const username = document.getElementById("reg-username").value.trim();
-    const email    = document.getElementById("reg-email").value.trim();
-    const password = document.getElementById("reg-password").value;
-    const confirm  = document.getElementById("reg-confirm").value;
-
-    let valid = true;
-    if (!username)           { setError("err-reg-username", "Username is required.");         valid = false; }
-    if (!email)              { setError("err-reg-email",    "Email is required.");             valid = false; }
-    if (!password)           { setError("err-reg-password", "Password is required.");         valid = false; }
-    if (password.length < 6) { setError("err-reg-password", "Min 6 characters.");             valid = false; }
-    if (password !== confirm){ setError("err-reg-confirm",  "Passwords do not match.");       valid = false; }
-    if (!valid) return;
-
-    setLoading(btnRegister, true);
-
-    const { ok, data } = await apiFetch("/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ username, email, password }),
+  // ── Real-time field validation ───────────────────────────
+  if (loginEmail) {
+    loginEmail.addEventListener("input", function () {
+      if (loginEmail.value.includes("@")) clearErr(loginEmail, emailMsg);
     });
-
-    setLoading(btnRegister, false);
-
-    if (ok) {
-      Auth.save(data.token, data.user);
-      showBanner("banner-register", "🎉 Account created! Taking you in…", false);
-      setTimeout(() => (window.location.href = "discover.html"), 800);
-    } else {
-      showBanner("banner-register", data.message || "Registration failed.", true);
-    }
-  });
-
-  // Password visibility toggles
-  document.querySelectorAll(".toggle-password").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const input = document.getElementById(btn.dataset.target);
-      if (!input) return;
-      input.type = input.type === "password" ? "text" : "password";
-      btn.textContent = input.type === "password" ? "👁" : "🙈";
+  }
+  if (loginPassword) {
+    loginPassword.addEventListener("input", function () {
+      if (loginPassword.value.length > 0) clearErr(loginPassword, pwMsg);
     });
-  });
+  }
+
+  // ── Password toggle (matches your pwToggle button) ───────
+  // Your HTML already calls togglePw() inline, so we just define it globally
+  window.togglePw = function (inputId, btnId) {
+    var input = document.getElementById(inputId);
+    var btn   = document.getElementById(btnId);
+    if (!input) return;
+    input.type      = input.type === "password" ? "text" : "password";
+    if (btn) btn.textContent = input.type === "password" ? "👁" : "🙈";
+  };
+
+  // ── Register form (if you add a sign-up page later) ──────
+  // Leave this here so extending is easy:
+  var registerForm = document.getElementById("registerForm");
+  if (registerForm) {
+    registerForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var username = (document.getElementById("reg-username") || document.getElementById("regUsername"))?.value.trim();
+      var email    = (document.getElementById("reg-email")    || document.getElementById("regEmail"))?.value.trim();
+      var password = (document.getElementById("reg-password") || document.getElementById("regPassword"))?.value;
+
+      if (!username || !email || !password) {
+        showLoginToast("All fields are required.", true);
+        return;
+      }
+      if (password.length < 6) {
+        showLoginToast("Password must be at least 6 characters.", true);
+        return;
+      }
+
+      var submitBtn = registerForm.querySelector("button[type=submit]");
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Creating…"; }
+
+      var res = await apiFetch("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ username: username, email: email, password: password }),
+      });
+
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Create Account"; }
+
+      if (res.ok) {
+        Auth.save(res.data.token, res.data.user);
+        showLoginToast("Account created! Welcome 🎶", false);
+        setTimeout(function () { window.location.href = "discover.html"; }, 900);
+      } else {
+        showLoginToast(res.data.message || "Registration failed.", true);
+      }
+    });
+  }
+
 });

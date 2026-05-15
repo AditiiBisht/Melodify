@@ -5,10 +5,11 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
 
+// ─────────────────────────────────────────────
 // Routes
+// ─────────────────────────────────────────────
 const authRoutes = require("./routes/authRoutes");
 const songRoutes = require("./routes/songs");
-app.use("/api/songs", songRoutes);
 const playlistRoutes = require("./routes/playlists");
 const userRoutes = require("./routes/user");
 
@@ -70,14 +71,12 @@ app.get("/", (req, res) => {
 // Global Error Handler
 // ─────────────────────────────────────────────
 app.use((err, req, res, next) => {
-
   console.error(err.stack);
 
   res.status(500).json({
     success: false,
     message: "Something went wrong.",
   });
-
 });
 
 // ─────────────────────────────────────────────
