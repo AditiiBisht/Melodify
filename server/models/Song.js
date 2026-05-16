@@ -28,10 +28,11 @@ const songSchema = new mongoose.Schema(
     audioUrl: {
       type: String,
       required: [true, "Audio URL is required"],
+      match: [/^https?:\/\/.+/, "Invalid audio URL"],
     },
     coverUrl: {
       type: String,
-      default: "",
+      default: "https://picsum.photos/300",
     },
     releaseYear: {
       type: Number,
@@ -57,6 +58,25 @@ const songSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+uploadedBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+},
+
+cloudinaryAudioId: {
+  type: String,
+  default: "",
+},
+
+cloudinaryCoverId: {
+  type: String,
+  default: "",
+},
+
+isPublished: {
+  type: Boolean,
+  default: true,
+},
   },
   { timestamps: true }
 );

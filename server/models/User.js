@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, "Email is required"],
+      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
       unique: true,
       lowercase: true,
       trim: true,
@@ -23,13 +24,18 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: "",
+    default: "https://i.pravatar.cc/150?img=12"
     },
     plan: {
       type: String,
       enum: ["free", "premium"],
       default: "free",
     },
+role: {
+  type: String,
+  enum: ["user", "admin"],
+  default: "user",
+},
     likedSongs: [
       {
         type: mongoose.Schema.Types.ObjectId,
